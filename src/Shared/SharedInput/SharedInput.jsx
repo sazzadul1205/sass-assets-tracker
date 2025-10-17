@@ -13,13 +13,18 @@ const SharedInput = ({
   required = false,
   className = "",
 }) => {
+
+  // Password
   const [showPassword, setShowPassword] = useState(false);
 
+  // Password toggle
   const inputType =
     type === "password" ? (showPassword ? "text" : "password") : type;
 
   return (
     <div className={`w-full ${className}`}>
+
+      {/* Label */}
       {label && (
         <label className="text-md block mb-2">
           <span className="font-semibold text-gray-700">
@@ -29,6 +34,7 @@ const SharedInput = ({
         </label>
       )}
 
+      {/* Input */}
       <div className="relative">
         <input
           type={inputType}
@@ -36,20 +42,8 @@ const SharedInput = ({
           {...(register
             ? register(name, { required })
             : { value, onChange, required })}
-          className="
-            w-full
-            px-4 py-2.5
-            border border-gray-400
-            rounded-lg
-            text-gray-800
-            placeholder-gray-400
-            focus:border-blue-500
-            focus:ring-4
-            focus:ring-blue-100
-            outline-none
-            transition-all
-            pr-11
-            bg-white
+          className=" w-full px-4 py-2.5 border border-gray-400 rounded-lg text-gray-800 
+          placeholder-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all pr-11 bg-white
           "
         />
 

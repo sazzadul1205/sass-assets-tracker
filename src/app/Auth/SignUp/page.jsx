@@ -10,30 +10,26 @@ import Logo from "@/../public/Auth_Assets/SAT_Logo.png";
 // Shared
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
-export default function LoginPage() {
-  // Form State
+const SignUpPage = () => {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // Loading State
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-
-  // Login
-  const handleLogin = (e) => {
+  const handleSignUp = (e) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      console.log({ email, password });
-      setLoading(false);
-      // TODO: Replace with real authentication logic
-    }, 1200);
+    // TODO: Add real sign-up logic here
+    console.log({ fullName, email, password, confirmPassword });
+
+    setTimeout(() => setLoading(false), 1500); // simulate async
   };
 
   return (
-    <div>
-      {/* Login Card */}
+    <div >
+      {/* Logo */}
       <Image
         src={Logo}
         alt="SAT Logo"
@@ -44,29 +40,33 @@ export default function LoginPage() {
       />
 
       {/* Card */}
-      <div
-        className="card w-full max-w-xl bg-white/80 backdrop-blur-md border border-gray-200 shadow-xl 
-        transform transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl "
-      >
-        {/* Logo Section */}
+      <div className="card w-full max-w-xl bg-white/80 backdrop-blur-md border border-gray-200 shadow-xl transform transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl">
+        {/* Heading */}
         <div className="mb-5 text-center">
-          {/* Heading */}
           <h1 className="text-3xl font-extrabold text-gray-800 mt-4 tracking-tight">
-            Welcome Back
+            Create Account
           </h1>
-
-          {/* Subheading */}
           <p className="text-gray-500 mt-1 text-sm">
-            Please sign in to access your dashboard
+            Please sign up to access your dashboard
           </p>
         </div>
 
         {/* Divider */}
         <p className="h-[1px] w-[80%] mx-auto bg-black" />
 
-        {/* Form Section */}
-        <form onSubmit={handleLogin} className="card-body w-md space-y-5">
-          {/* Form Inputs - Email */}
+        {/* Form */}
+        <form onSubmit={handleSignUp} className="card-body w-md space-y-5">
+          {/* Full Name */}
+          <SharedInput
+            label="Full Name"
+            type="text"
+            placeholder="Your full name"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+          />
+
+          {/* Email */}
           <SharedInput
             label="Email"
             type="email"
@@ -76,7 +76,7 @@ export default function LoginPage() {
             required
           />
 
-          {/* Form Inputs - Password */}
+          {/* Password */}
           <SharedInput
             label="Password"
             type="password"
@@ -86,17 +86,17 @@ export default function LoginPage() {
             required
           />
 
-          {/* Forgot Password */}
-          <div className="flex justify-end -mt-2">
-            <a
-              href="#"
-              className="text-sm text-blue-600 hover:underline hover:text-blue-700 transition-colors"
-            >
-              Forgot password?
-            </a>
-          </div>
+          {/* Confirm Password */}
+          <SharedInput
+            label="Confirm Password"
+            type="password"
+            placeholder="••••••••"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
 
-          {/* Login Button */}
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -108,21 +108,21 @@ export default function LoginPage() {
             {loading ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "Sign In"
+              "Sign Up"
             )}
           </button>
 
           {/* Divider */}
           <div className="divider my-2 text-gray-400">OR</div>
 
-          {/* Create Account */}
+          {/* Login Link */}
           <p className="text-center text-sm text-gray-600">
-            Don’t have an account?{" "}
+            Already have an account?{" "}
             <a
-              href="/Auth/SignUp"
+              href="/Auth/Login"
               className="font-semibold text-blue-600 hover:text-blue-700 hover:underline"
             >
-              Create one
+              Sign In
             </a>
           </p>
         </form>
@@ -134,4 +134,6 @@ export default function LoginPage() {
       </footer>
     </div>
   );
-}
+};
+
+export default SignUpPage;
