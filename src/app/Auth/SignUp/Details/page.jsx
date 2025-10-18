@@ -1,32 +1,84 @@
 // Auth/SignUp/Details/page.jsx
 "use client";
 
-import Image from 'next/image';
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import Image from "next/image";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import Swal from "sweetalert2";
+import axios from "axios";
 
-// Shared input
-import SharedInput from '@/Shared/SharedInput/SharedInput';
+// Shared components
+import SharedInput from "@/Shared/SharedInput/SharedInput";
+import SharedImageInput from "@/Shared/SharedImageInput/SharedImageInput";
 
 // Assets
 import Logo from "../../../../../public/Auth_Assets/SAT_Logo.png";
-import SharedImageInput from '@/Shared/SharedImageInput/SharedImageInput';
+
+// Image hosting config
+const Image_Hosting_Key = process.env.NEXT_PUBLIC_IMAGE_HOSTING_KEY;
+const Image_Hosting_API = `https://api.imgbb.com/1/upload?key=${Image_Hosting_Key}`;
 
 const DetailsPage = () => {
-
   const [profileImage, setProfileImage] = useState(null);
 
-  // React Hook Form setup
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm();
+    reset,
+  } = useForm({
+    mode: "onSubmit", 
+  });
 
-  // Form submit handler
-  const onSubmit = (data) => {
-    console.log("Form submitted:", data);
-    // Here you can send `data` to your API later
+  const onSubmit = async (data) => {
+    try {
+      let uploadedImageUrl = null;
+
+      // Upload image if selected
+      if (profileImage) {
+        const formData = new FormData();
+        formData.append("image", profileImage);
+
+        const res = await axios.post(Image_Hosting_API, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        uploadedImageUrl = res.data.data.display_url;
+      }
+
+      // Final payload
+      const payload = {
+        ...data,
+        profileImage: uploadedImageUrl,
+      };
+
+      console.log("Submitted Data:", payload);
+
+      // Success Toast
+      Swal.fire({
+        toast: true,
+        position: "bottom-end",
+        icon: "success",
+        title: "Details saved successfully!",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+      });
+
+      reset();
+      setProfileImage(null);
+    } catch (error) {
+      console.error("❌ Submission error:", error);
+
+      Swal.fire({
+        icon: "error",
+        title: "Submission Failed",
+        text:
+          error?.response?.data?.message ||
+          "An unexpected error occurred. Please try again.",
+        confirmButtonColor: "#2563eb",
+      });
+    }
   };
 
   return (
@@ -42,33 +94,40 @@ const DetailsPage = () => {
       />
 
       {/* Profile Details Card */}
-      <div className="card w-full min-w-lg bg-white/80 backdrop-blur-md border border-gray-200 shadow-xl hover:-translate-y-1.5 transition-all p-6 space-y-4">
+      <div className="card w-full min-w-lg bg-white/90 backdrop-blur-md border border-gray-200 shadow-xl hover:-translate-y-1.5 transition-all p-6 space-y-5 rounded-2xl">
+        {/* Profile Image Input */}
+        <SharedImageInput onChange={setProfileImage} width={200} height={200} />
 
-        {/* Placeholder for future profile image */}
-        <SharedImageInput onChange={setProfileImage}
-          width={220}
-          height={220}
-        />
-
-        {/* User Information Form */}
+        {/* User Info Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
           {/* Phone Number */}
           <SharedInput
             label="Phone Number"
             type="tel"
             placeholder="Enter your phone number"
-            {...register("phone", {
+            register={register}
+            name="phone"
+            rules={{
               required: "Phone number is required",
-              pattern: { value: /^[0-9]{10,15}$/, message: "Invalid phone number" },
-            })}
+              pattern: {
+                value: /^\+?[0-9]{10,15}$/,
+                message: "Invalid phone number format",
+              },
+            }}
             error={errors.phone}
           />
+
 
           {/* Organization Name */}
           <SharedInput
             label="Organization Name"
-            placeholder="Enter your Organization Name"
-            {...register("organization", { required: "Organization is required" })}
+            placeholder="Enter your organization name"
+            register={register}
+            name="organization"
+            rules={{
+              required: "Organization name is required",
+              minLength: { value: 3, message: "Too short!" },
+            }}
             error={errors.organization}
           />
 
@@ -76,7 +135,9 @@ const DetailsPage = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`btn w-full h-11 font-semibold tracking-wide ${isSubmitting ? "btn-disabled bg-blue-400" : "btn-primary bg-blue-600 hover:bg-blue-700"
+            className={`w-full h-11 font-semibold text-white rounded-lg transition-all ${isSubmitting
+              ? "bg-blue-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
               }`}
           >
             {isSubmitting ? "Saving..." : "Save Details"}

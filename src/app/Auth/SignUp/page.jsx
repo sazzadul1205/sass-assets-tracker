@@ -126,7 +126,15 @@ const SignUpPage = () => {
             label="Email"
             type="email"
             placeholder="your@email.com"
-            register={register}
+            register={(name, options) =>
+              register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Enter a valid email address",
+                },
+              })
+            }
             name="email"
             required={true}
             error={errors.email}
@@ -136,7 +144,12 @@ const SignUpPage = () => {
             label="Password"
             type="password"
             placeholder="••••••••"
-            register={register}
+            register={(name, options) =>
+              register("password", {
+                required: "Password is required",
+                minLength: { value: 6, message: "Must be at least 6 characters" },
+              })
+            }
             name="password"
             required={true}
             error={errors.password}
@@ -146,11 +159,18 @@ const SignUpPage = () => {
             label="Confirm Password"
             type="password"
             placeholder="••••••••"
-            register={register}
+            register={(name, options) =>
+              register("confirmPassword", {
+                required: "Confirm your password",
+                validate: (value) =>
+                  value === watch("password") || "Passwords do not match",
+              })
+            }
             name="confirmPassword"
             required={true}
             error={errors.confirmPassword}
           />
+
 
           {/* Submit button */}
           <button

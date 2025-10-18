@@ -1,8 +1,16 @@
 "use client";
-import React, { useState, useCallback } from "react";
+
+// React components
+import { useState, useCallback } from "react";
+
+// Packages
 import Cropper from "react-easy-crop";
-import { getCroppedImgCircular } from "../Utils/getCroppedImg"; // modified to return circular crop
+
+// Icons
 import { FaUpload } from "react-icons/fa";
+
+// Utils
+import { getCroppedImgCircular } from "../Utils/getCroppedImg";
 
 const SharedImageInputCircular = ({
   onChange,
@@ -15,15 +23,17 @@ const SharedImageInputCircular = ({
   hint = "Drag & drop or click to upload",
 }) => {
   const [zoom, setZoom] = useState(1);
+  const [error, setError] = useState("");
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [imageSrc, setImageSrc] = useState(defaultImage);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-  const [error, setError] = useState("");
 
+  // Handle crop
   const onCropComplete = useCallback((_, croppedPixels) => {
     setCroppedAreaPixels(croppedPixels);
   }, []);
 
+  // Handle file
   const handleFile = (file) => {
     if (!file) return;
 
@@ -50,7 +60,7 @@ const SharedImageInputCircular = ({
     reader.readAsDataURL(file);
   };
 
-
+  // Handle crop
   const handleCropConfirm = async () => {
     try {
       const croppedFile = await getCroppedImgCircular(imageSrc, croppedAreaPixels);
@@ -65,6 +75,7 @@ const SharedImageInputCircular = ({
 
   return (
     <div className="w-full max-w-sm mx-auto space-y-2">
+      {/* Label */}
       {label && <label className="block text-gray-700 text-center font-semibold">{label}</label>}
 
       {/* Image Preview */}
@@ -94,6 +105,7 @@ const SharedImageInputCircular = ({
         />
       </div>
 
+      {/* Error */}
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
       {/* Cropper Modal */}
