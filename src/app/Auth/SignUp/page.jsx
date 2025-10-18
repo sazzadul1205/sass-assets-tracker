@@ -1,13 +1,22 @@
+// Auth/SignUp/page.jsx
 "use client";
 
+// Next.js components
 import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+
+// Packages
 import Swal from "sweetalert2";
 import { useForm } from "react-hook-form";
 
-import Logo from "@/../public/Auth_Assets/SAT_Logo.png";
+// Assets
+import Logo from "../../../../public/Auth_Assets/SAT_Logo.png";
+
+// Shared
 import SharedInput from "@/Shared/SharedInput/SharedInput";
+
+// Hooks
 import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
 const SignUpPage = () => {
@@ -51,7 +60,7 @@ const SignUpPage = () => {
 
       // 3️⃣ Success toast
       Swal.fire({
-        position: "top-start",
+        position: "top-left",
         icon: "success",
         title: "Success",
         text: "Account created and logged in successfully!",
@@ -62,7 +71,7 @@ const SignUpPage = () => {
       });
 
       // 4️⃣ Redirect to details page
-      router.push("/SignUp/Details");
+      router.push("/Auth/SignUp/Details");
     } catch (err) {
       Swal.fire({
         position: "center",
