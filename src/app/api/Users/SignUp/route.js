@@ -3,12 +3,12 @@ import { connectDB } from "@/lib/connectDB";
 import bcrypt from "bcrypt";
 
 export const POST = async (request) => {
-  console.log("🚀 /api/Users/SignUp POST called");
-
   try {
     const newUser = await request.json();
 
-    if (!newUser || !newUser.email || !newUser.password) {
+    // Basic required fields validation
+    const { name, email, password } = newUser;
+    if (!name || !email || !password) {
       return new Response(
         JSON.stringify({ message: "Missing required user data" }),
         { status: 400 }
@@ -18,25 +18,26 @@ export const POST = async (request) => {
     const db = await connectDB();
     const userCollection = db.collection("Users");
 
-    // Check if user exists
-    const existingUser = await userCollection.findOne({ email: newUser.email });
+    // Check if user already exists
+    const existingUser = await userCollection.findOne({ email });
     if (existingUser) {
       return new Response(JSON.stringify({ message: "User already exists" }), {
         status: 409,
       });
     }
 
-    // ✅ Hash the password
-    const hashedPassword = await bcrypt.hash(newUser.password, 10);
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert new user with hashed password
-    const result = await userCollection.insertOne({
-      ...newUser,
+    // Whitelist only allowed fields
+    const userToInsert = {
+      name,
+      email,
       password: hashedPassword,
       createdAt: new Date(),
-    });
+    };
 
-    console.log(`User created successfully: ${result.insertedId}`);
+    const result = await userCollection.insertOne(userToInsert);
 
     return new Response(
       JSON.stringify({
@@ -47,7 +48,6 @@ export const POST = async (request) => {
     );
   } catch (error) {
     console.error("[SignUp API] Error:", error.message);
-
     return new Response(
       JSON.stringify({
         message: "Internal server error. Please try again later.",
