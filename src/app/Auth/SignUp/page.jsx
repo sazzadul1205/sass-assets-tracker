@@ -1,47 +1,95 @@
 "use client";
 
-// Next.js components
 import Image from "next/image";
-import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
+import { useForm } from "react-hook-form";
 
-// Assets
 import Logo from "@/../public/Auth_Assets/SAT_Logo.png";
-
-// Shared
 import SharedInput from "@/Shared/SharedInput/SharedInput";
+import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
 const SignUpPage = () => {
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const axiosPublic = useAxiosPublic();
 
-  const handleSignUp = (e) => {
-    e.preventDefault();
-    setLoading(true);
+  // React Hook Form setup
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm();
 
-    // TODO: Add real sign-up logic here
-    console.log({ fullName, email, password, confirmPassword });
+  const password = watch("password", "");
 
-    setTimeout(() => setLoading(false), 1500); // simulate async
+  const onSubmit = async (data) => {
+    try {
+      // 1️⃣ Send signup request
+      await axiosPublic.post("/Users/SignUp", data);
+
+
+      // 2️⃣ Auto-login
+      const loginResponse = await signIn("credentials", {
+        redirect: false,
+        email: data.email,
+        password: data.password,
+      });
+
+      if (loginResponse?.error) {
+        Swal.fire({
+          position: "center",
+          icon: "error",
+          title: "Login Failed",
+          text: loginResponse.error,
+          showConfirmButton: true,
+          allowOutsideClick: false,
+        });
+        return;
+      }
+
+      // 3️⃣ Success toast
+      Swal.fire({
+        position: "top-start",
+        icon: "success",
+        title: "Success",
+        text: "Account created and logged in successfully!",
+        showConfirmButton: false,
+        timer: 2500,
+        toast: true,
+        timerProgressBar: true,
+      });
+
+      // 4️⃣ Redirect to details page
+      router.push("/SignUp/Details");
+    } catch (err) {
+      Swal.fire({
+        position: "center",
+        icon: "error",
+        title: "Sign Up Failed",
+        text: err.response?.data?.message || err.message || "Something went wrong",
+        showConfirmButton: true,
+        allowOutsideClick: false,
+      });
+    }
   };
 
   return (
-    <div >
+    <div>
       {/* Logo */}
       <Image
         src={Logo}
         alt="SAT Logo"
         width={300}
         height={100}
-        className="mx-auto object-contain drop-shadow-md pb-4"
+        className="mx-auto pb-4"
         priority
       />
 
-      {/* Card */}
-      <div className="card w-full max-w-xl bg-white/80 backdrop-blur-md border border-gray-200 shadow-xl transform transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl">
-        {/* Heading */}
+      {/* Card container */}
+      <div className="card w-full max-w-xl bg-white/80 backdrop-blur-md border border-gray-200 shadow-xl hover:-translate-y-1.5 transition-all">
+        {/* Header */}
         <div className="mb-5 text-center">
           <h1 className="text-3xl font-extrabold text-gray-800 mt-4 tracking-tight">
             Create Account
@@ -54,68 +102,61 @@ const SignUpPage = () => {
         {/* Divider */}
         <p className="h-[1px] w-[80%] mx-auto bg-black" />
 
-        {/* Form */}
-        <form onSubmit={handleSignUp} className="card-body w-md space-y-5">
-          {/* Full Name */}
+        {/* Signup form */}
+        <form onSubmit={handleSubmit(onSubmit)} className="card-body w-md space-y-3">
           <SharedInput
             label="Full Name"
-            type="text"
             placeholder="Your full name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
+            register={register}
+            name="name"
+            required={true}
+            error={errors.name}
           />
 
-          {/* Email */}
           <SharedInput
             label="Email"
             type="email"
             placeholder="your@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            register={register}
+            name="email"
+            required={true}
+            error={errors.email}
           />
 
-          {/* Password */}
           <SharedInput
             label="Password"
             type="password"
             placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+            register={register}
+            name="password"
+            required={true}
+            error={errors.password}
           />
 
-          {/* Confirm Password */}
           <SharedInput
             label="Confirm Password"
             type="password"
             placeholder="••••••••"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
+            register={register}
+            name="confirmPassword"
+            required={true}
+            error={errors.confirmPassword}
           />
 
-          {/* Submit Button */}
+          {/* Submit button */}
           <button
             type="submit"
-            disabled={loading}
-            className={`btn w-full h-11 font-semibold tracking-wide ${loading
-              ? "btn-disabled bg-blue-400 text-white"
-              : "btn-primary bg-blue-600 hover:bg-blue-700 text-white transition-all"
+            disabled={isSubmitting}
+            className={`btn w-full h-11 font-semibold tracking-wide ${isSubmitting ? "btn-disabled bg-blue-400" : "btn-primary bg-blue-600 hover:bg-blue-700"
               }`}
           >
-            {loading ? (
-              <span className="loading loading-spinner loading-sm"></span>
-            ) : (
-              "Sign Up"
-            )}
+            {isSubmitting ? <span className="loading loading-spinner loading-sm"></span> : "Sign Up"}
           </button>
 
           {/* Divider */}
           <div className="divider my-2 text-gray-400">OR</div>
 
-          {/* Login Link */}
+          {/* Login link */}
           <p className="text-center text-sm text-gray-600">
             Already have an account?{" "}
             <a
