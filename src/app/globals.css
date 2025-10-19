@@ -4,3 +4,35 @@
 button {
     cursor: pointer;
 }
+
+/* Make default date input icon black */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0);
+    /* ensures black color */
+    opacity: 1;
+    cursor: pointer;
+}
+
+/* Optional: Adjust size or alignment */
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-clear-button {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        /* turns it white in dark mode */
+    }
+}
+
+.react-datepicker__calendar-icon {
+    color: black !important;
+}
+
+/* Ensure react-datepicker input stretches full width */
+.react-datepicker-wrapper,
+.react-datepicker__input-container {
+    display: block !important;
+    width: 100% !important;
+}

@@ -113,6 +113,7 @@ const SignUpPage = () => {
 
         {/* Signup form */}
         <form onSubmit={handleSubmit(onSubmit)} className="card-body w-md space-y-3">
+          {/* Name */}
           <SharedInput
             label="Full Name"
             placeholder="Your full name"
@@ -122,6 +123,7 @@ const SignUpPage = () => {
             error={errors.name}
           />
 
+          {/* Email */}
           <SharedInput
             label="Email"
             type="email"
@@ -140,6 +142,7 @@ const SignUpPage = () => {
             error={errors.email}
           />
 
+          {/* Password */}
           <SharedInput
             label="Password"
             type="password"
@@ -155,6 +158,7 @@ const SignUpPage = () => {
             error={errors.password}
           />
 
+          {/* Confirm Password */}
           <SharedInput
             label="Confirm Password"
             type="password"
