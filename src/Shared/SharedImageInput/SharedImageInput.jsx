@@ -22,6 +22,8 @@ const SharedImageInputCircular = ({
   label = "Profile Image",
   hint = "Drag & drop or click to upload",
 }) => {
+
+  // State
   const [zoom, setZoom] = useState(1);
   const [error, setError] = useState("");
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -35,20 +37,27 @@ const SharedImageInputCircular = ({
 
   // Handle file
   const handleFile = (file) => {
+
+    // Check file
     if (!file) return;
 
+    // Check file type
     const acceptedTypes = ["image/jpeg", "image/png"];
     if (!acceptedTypes.includes(file.type)) {
       setError("Invalid file type. Only JPEG/PNG allowed.");
       return;
     }
 
+    // Check file size
     if (file.size > maxSizeMB * 1024 * 1024) {
       setError(`File too large. Max size is ${maxSizeMB}MB.`);
       return;
     }
 
+    // Read file
     const reader = new FileReader();
+
+    // Handle read
     reader.onload = () => {
       setImageSrc(reader.result);
       setError("");
@@ -63,11 +72,15 @@ const SharedImageInputCircular = ({
   // Handle crop
   const handleCropConfirm = async () => {
     try {
+
+      // Crop image
       const croppedFile = await getCroppedImgCircular(imageSrc, croppedAreaPixels);
       setImageSrc(URL.createObjectURL(croppedFile));
       if (onChange) onChange(croppedFile);
       document.getElementById("crop_modal").close();
     } catch (err) {
+
+      // Handle error
       console.error(err);
       setError("Failed to crop image.");
     }
@@ -80,7 +93,7 @@ const SharedImageInputCircular = ({
 
       {/* Image Preview */}
       <div
-        className="relative flex items-center justify-center border-2 border-dashed border-gray-400 hover:border-blue-500 cursor-pointer overflow-hidden mx-auto rounded-full"
+        className="relative flex items-center justify-center border-2 border-dashed border-gray-400 hover:border-blue-500 cursor-pointer overflow-hidden mx-auto rounded-full group"
         style={{ width, height }}
         onDrop={(e) => {
           e.preventDefault();
@@ -88,15 +101,29 @@ const SharedImageInputCircular = ({
         }}
         onDragOver={(e) => e.preventDefault()}
       >
+        {/* Image */}
         {imageSrc ? (
-          <img src={imageSrc} alt="Preview" className="w-full h-full object-cover rounded-full" />
+          <img
+            src={imageSrc}
+            alt="Preview"
+            className="w-full h-full object-cover rounded-full"
+          />
         ) : (
-          <div className="flex flex-col items-center text-gray-400">
-            <FaUpload size={IconSize} className="text-gray-400 group-hover:text-blue-500" />
-            <span className="text-center">{hint}</span>
+          <div className="flex flex-col items-center text-gray-400 transition-colors duration-200">
+            {/* Icon */}
+            <FaUpload
+              size={IconSize}
+              className="text-gray-400 group-hover:text-blue-500 transition-colors duration-200"
+            />
+
+            {/* Hint */}
+            <span className="text-center group-hover:text-blue-500 transition-colors duration-200">
+              {hint}
+            </span>
           </div>
         )}
 
+        {/* File Input */}
         <input
           type="file"
           accept="image/jpeg,image/png"
@@ -111,8 +138,10 @@ const SharedImageInputCircular = ({
       {/* Cropper Modal */}
       <dialog id="crop_modal" className="modal">
         <div className="modal-box flex flex-col items-center space-y-4 bg-white text-black">
+          {/* Title */}
           <h3 className="font-bold text-lg">Crop Your Image</h3>
 
+          {/* Image */}
           {imageSrc && (
             <div className="relative w-[256px] h-[256px] bg-gray-200 overflow-hidden rounded-full">
               <Cropper
@@ -151,6 +180,7 @@ const SharedImageInputCircular = ({
 
           {/* Buttons */}
           <div className="flex justify-between gap-2 w-full mt-4">
+            {/* Confirm */}
             <button
               type="button"
               onClick={handleCropConfirm}
@@ -158,6 +188,8 @@ const SharedImageInputCircular = ({
             >
               Confirm Crop
             </button>
+
+            {/* Cancel */}
             <button
               type="button"
               onClick={() => document.getElementById("crop_modal").close()}
