@@ -1,28 +1,34 @@
 // api/auth/[...nextauth]/route.js
+// MongoDB
 import { connectDB } from "@/lib/connectDB";
 
-// Auth Server
+// Next Auth
 import NextAuth from "next-auth";
-
-// Providers
 import CredentialsProvider from "next-auth/providers/credentials";
 
-// Encryption
+// Bcrypt
 import bcrypt from "bcrypt";
 
 const handler = NextAuth({
+  // Secret
   secret: process.env.NEXT_PUBLIC_AUTH_SECRET,
 
   providers: [
     CredentialsProvider({
+      // Provider
       name: "Credentials",
+
+      // Credentials
       credentials: {
+        // email
         email: {
           label: "Email",
           type: "email",
           placeholder: "your@email.com",
           requires: true,
         },
+
+        // password
         password: {
           label: "Password",
           type: "password",
@@ -30,48 +36,46 @@ const handler = NextAuth({
           requires: true,
         },
       },
+
+      // Authorization
       async authorize(credentials) {
         const { email, password } = credentials;
-
-        // Basic validation
         if (!email || !password) throw new Error("Email and password required");
 
-        // Connect to MongoDB
         const db = await connectDB();
         const user = await db.collection("Users").findOne({ email });
-
         if (!user) throw new Error("User not found");
 
-        // Compare password with hashed one
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) throw new Error("Invalid password");
 
-        // Return user object (omit password)
-        return {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-        };
+        return { email: user.email };
       },
     }),
   ],
 
+  // Session
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
   },
 
+  // Pages
   pages: {
     signIn: "/Auth/Login",
   },
 
+  // JWT & Session callbacks
   callbacks: {
+    // JWT callback
     async jwt({ token, user }) {
-      if (user) token.type = user.type; // Include type in the JWT token
+      if (user) token.email = user.email;
       return token;
     },
+
+    // Session callback
     async session({ session, token }) {
-      session.user = token.user;
+      session.user = { email: token.email };
       return session;
     },
   },
