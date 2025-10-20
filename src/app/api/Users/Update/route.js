@@ -1,18 +1,26 @@
 // app/api/Users/Update/route.js
 import { connectDB } from "@/lib/connectDB";
 
+// PUT request
 export const PUT = async (request) => {
   try {
+    // Get request body
     const data = await request.json();
-    const { email, name, dob, phone, organization, designation } = data;
 
+    // Destructure data
+    const { email, name, dob, phone, organization, role, designation } = data;
+
+    // Basic required fields validation
     if (!email) {
       return new Response(JSON.stringify({ message: "Email is required" }), {
         status: 400,
       });
     }
 
+    // Connect to DB
     const db = await connectDB();
+
+    // Get user collection
     const userCollection = db.collection("Users");
 
     // Check if user exists
@@ -25,22 +33,29 @@ export const PUT = async (request) => {
 
     // Prepare fields to update
     const updatedFields = {
-      ...(name && { name }),
+      // Update fields
       ...(dob && { dob }),
+      ...(name && { name }),
+      ...(role && { role }),
       ...(phone && { phone }),
-      ...(organization && { organization }),
       ...(designation && { designation }),
+      ...(organization && { organization }),
+
+      // Update timestamps
       updatedAt: new Date(),
     };
 
     // Update user in DB
     await userCollection.updateOne({ email }, { $set: updatedFields });
 
+    // Return success response
     return new Response(
       JSON.stringify({ message: "User updated successfully" }),
       { status: 200 }
     );
   } catch (error) {
+    
+    // Return error response
     console.error("[Update User API] Error:", error);
     return new Response(
       JSON.stringify({
