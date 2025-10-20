@@ -4,6 +4,8 @@ import { connectDB } from "@/lib/connectDB";
 
 // Next Auth
 import NextAuth from "next-auth";
+
+// Credentials Provider
 import CredentialsProvider from "next-auth/providers/credentials";
 
 // Bcrypt
@@ -39,17 +41,29 @@ const handler = NextAuth({
 
       // Authorization
       async authorize(credentials) {
+        // Destructure credentials
         const { email, password } = credentials;
+
+        // Basic required fields validation
         if (!email || !password) throw new Error("Email and password required");
 
+        // Connect to MongoDB
         const db = await connectDB();
+
+        // Fetch full user document
         const user = await db.collection("Users").findOne({ email });
+
+        // Check if user exists
         if (!user) throw new Error("User not found");
 
+        // Check if password is valid
         const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        // Check if password is valid
         if (!isPasswordValid) throw new Error("Invalid password");
 
-        return { email: user.email };
+        // Return user & role
+        return { email: user.email, role: user.role || "Employee" };
       },
     }),
   ],
@@ -58,6 +72,7 @@ const handler = NextAuth({
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
+    // maxAge: 10,
   },
 
   // Pages
@@ -67,16 +82,25 @@ const handler = NextAuth({
 
   // JWT & Session callbacks
   callbacks: {
-    // JWT callback
+    // JWT
     async jwt({ token, user }) {
-      if (user) token.email = user.email;
+      if (user) {
+        token.email = user.email;
+        token.role = user.role || "Employee";
+      }
       return token;
     },
 
-    // Session callback
+    // Session
     async session({ session, token }) {
-      session.user = { email: token.email };
-      return session;
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          email: token.email,
+          role: token.role || "Employee",
+        },
+      };
     },
   },
 });
