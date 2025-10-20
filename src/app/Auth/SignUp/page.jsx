@@ -60,7 +60,7 @@ const SignUpPage = () => {
 
       // 3️⃣ Success toast
       Swal.fire({
-        position: "top-left",
+        position: "top-end",
         icon: "success",
         title: "Success",
         text: "Account created and logged in successfully!",

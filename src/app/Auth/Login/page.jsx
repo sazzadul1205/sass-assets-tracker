@@ -1,8 +1,17 @@
+// Auth/Login/page.jsx
 "use client";
+
+// React components
+import { useEffect } from "react";
 
 // Next.js components
 import Image from "next/image";
-import { useState } from "react";
+import { getSession, signIn } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+// Packages
+import Swal from "sweetalert2";
+import { useForm } from "react-hook-form";
 
 // Assets
 import Logo from "@/../public/Auth_Assets/SAT_Logo.png";
@@ -10,52 +19,113 @@ import Logo from "@/../public/Auth_Assets/SAT_Logo.png";
 // Shared
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
-export default function LoginPage() {
-  // Form State
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const page = () => {
+  const router = useRouter();
 
-  // Loading State
-  const [loading, setLoading] = useState(false);
+  // Next.js hooks
+  const searchParams = useSearchParams();
+  const expired = searchParams.get("expired");
 
+  // React Hook Form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm();
 
-  // Login
-  const handleLogin = (e) => {
-    e.preventDefault();
-    setLoading(true);
+  // Check for expired session
+  useEffect(() => {
+    if (expired) {
+      Swal.fire({
+        icon: "error",
+        title: "Session Expired",
+        text: "Your session has expired. Please log in again.",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+    }
+  }, [expired]);
 
-    setTimeout(() => {
-      console.log({ email, password });
-      setLoading(false);
-      // TODO: Replace with real authentication logic
-    }, 1200);
+  // Login handler
+  const onSubmit = async (data) => {
+    try {
+      const res = await signIn("credentials", {
+        redirect: false,
+        email: data.email,
+        password: data.password,
+      });
+
+      if (res.error) {
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "error",
+          title: res.error,
+          showConfirmButton: false,
+          timer: 2500,
+          timerProgressBar: true,
+        });
+      } else if (res.ok) {
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "success",
+          title: "Login successful!",
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+        });
+
+        // Wait for session to be ready
+        const session = await getSession();
+        const role = session?.user?.role || "Employee";
+
+        switch (role) {
+          case "Manager":
+            router.push("/Manager/Dashboard");
+            break;
+          case "Admin":
+            router.push("/Admin/Dashboard");
+            break;
+          default:
+            router.push("/Employee/MyAssets");
+        }
+      }
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: err.message || "Unexpected error occurred",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+      });
+    }
   };
 
   return (
-    <div>
-      {/* Login Card */}
+    <div >
+      {/* Logo */}
       <Image
         src={Logo}
         alt="SAT Logo"
         width={300}
         height={100}
-        className="mx-auto object-contain drop-shadow-md pb-4"
+        className="mx-auto pb-4"
         priority
       />
 
       {/* Card */}
-      <div
-        className="card w-full max-w-xl bg-white/80 backdrop-blur-md border border-gray-200 shadow-xl 
-        transform transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl "
-      >
-        {/* Logo Section */}
-        <div className="mb-5 text-center">
-          {/* Heading */}
+      <div className="card w-full min-w-md bg-white/90 backdrop-blur-md border border-gray-200 shadow-xl hover:-translate-y-1.5 transition-all p-6 space-y-5 rounded-2xl">
+        {/* Heading */}
+        <div className="text-center mb-5">
           <h1 className="text-3xl font-extrabold text-gray-800 mt-4 tracking-tight">
             Welcome Back
           </h1>
-
-          {/* Subheading */}
           <p className="text-gray-500 mt-1 text-sm">
             Please sign in to access your dashboard
           </p>
@@ -64,26 +134,45 @@ export default function LoginPage() {
         {/* Divider */}
         <p className="h-[1px] w-[80%] mx-auto bg-black" />
 
-        {/* Form Section */}
-        <form onSubmit={handleLogin} className="card-body w-md space-y-5">
-          {/* Form Inputs - Email */}
+        {/* Form */}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-5"
+          noValidate
+        >
+          {/* Email */}
           <SharedInput
             label="Email"
             type="email"
             placeholder="your@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            register={(name, options) =>
+              register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Enter a valid email address",
+                },
+              })
+            }
+            name="email"
+            required={true}
+            error={errors.email}
           />
 
-          {/* Form Inputs - Password */}
+          {/* Password */}
           <SharedInput
             label="Password"
             type="password"
             placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+            register={(name, options) =>
+              register("password", {
+                required: "Password is required",
+                minLength: { value: 6, message: "Must be at least 6 characters" },
+              })
+            }
+            name="password"
+            required={true}
+            error={errors.password}
           />
 
           {/* Forgot Password */}
@@ -96,23 +185,23 @@ export default function LoginPage() {
             </a>
           </div>
 
-          {/* Login Button */}
+          {/* Submit */}
           <button
             type="submit"
-            disabled={loading}
-            className={`btn w-full h-11 font-semibold tracking-wide ${loading
-              ? "btn-disabled bg-blue-400 text-white"
+            disabled={isSubmitting}
+            className={`btn w-full h-11 font-semibold tracking-wide ${isSubmitting
+              ? "btn-disabled bg-blue-400 text-white cursor-not-allowed"
               : "btn-primary bg-blue-600 hover:bg-blue-700 text-white transition-all"
               }`}
           >
-            {loading ? (
+            {isSubmitting ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
               "Sign In"
             )}
           </button>
 
-          {/* Divider */}
+          {/* OR Divider */}
           <div className="divider my-2 text-gray-400">OR</div>
 
           {/* Create Account */}
@@ -135,3 +224,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default page;
