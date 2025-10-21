@@ -10,32 +10,41 @@ import { FaEye, FaEyeSlash, FaCalendarAlt } from "react-icons/fa";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-// PAckages
+// RHF
 import { Controller } from "react-hook-form";
 
 /**
  * SharedInput
- * Reusable input with RHF support, optional rules, password toggle, and datepicker.
+ * Reusable input supporting:
+ * - text, password, email, number, etc.
+ * - textarea with configurable rows
+ * - datepicker via react-hook-form Controller
+ * - select dropdown (options from parent)
+ * - error display
  */
 const SharedInput = ({
   label,
   type = "text",
   placeholder = "",
   register, // RHF register function
-  name, // field name
-  error, // error object from RHF
+  name,
+  error,
   rules = {},
   className = "",
-  control, // optional Controller from RHF
+  control, // optional RHF Controller for date
+  rows = 3, // for textarea
+  options = [], // for select dropdown
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const inputType = type === "password" ? (showPassword ? "text" : "password") : type;
 
-  const inputType =
-    type === "password" ? (showPassword ? "text" : "password") : type;
+  const commonClasses = `w-full px-4 py-2.5 border rounded-lg text-gray-800 placeholder-gray-400 focus:ring-4 outline-none transition-all ${error
+    ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+    : "border-gray-400 focus:border-blue-500 focus:ring-blue-100"
+    }`;
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Label */}
       {label && (
         <label className="text-md block mb-2">
           <span className="font-semibold text-gray-700">
@@ -45,8 +54,32 @@ const SharedInput = ({
         </label>
       )}
 
-      {/* DatePicker with Controller */}
-      {type === "date" && control ? (
+      {/* Textarea */}
+      {type === "textarea" ? (
+        <textarea
+          placeholder={placeholder}
+          rows={rows}
+          {...(register ? register(name, rules) : {})}
+          className={commonClasses + " resize-none"}
+        />
+      ) : type === "select" ? (
+        // Dropdown select
+        <select
+          {...(register ? register(name, rules) : {})}
+          className={commonClasses}
+          defaultValue=""
+        >
+          <option value="" disabled>
+            {placeholder || "Select an option"}
+          </option>
+          {options.map((opt) => (
+            <option key={opt.value || opt} value={opt.value || opt}>
+              {opt.label || opt}
+            </option>
+          ))}
+        </select>
+      ) : type === "date" && control ? (
+        // DatePicker
         <Controller
           control={control}
           name={name}
@@ -65,29 +98,21 @@ const SharedInput = ({
                 maxDate={new Date()}
                 yearDropdownItemNumber={100}
                 scrollableYearDropdown
-                className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-gray-800 placeholder-gray-400 focus:ring-4 outline-none transition-all
-                  ${error
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                    : "border-gray-400 focus:border-blue-500 focus:ring-blue-100"
-                  }`}
+                className={`pl-10 ${commonClasses}`}
               />
             </div>
           )}
         />
       ) : (
+        // Regular input
         <div className="relative">
           <input
             type={inputType}
             placeholder={placeholder}
             {...(register ? register(name, rules) : {})}
-            className={`w-full px-4 py-2.5 border rounded-lg text-gray-800 placeholder-gray-400 focus:ring-4 outline-none pr-11 transition-all
-              ${error
-                ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                : "border-gray-400 focus:border-blue-500 focus:ring-blue-100"
-              }`}
+            className={commonClasses + " pr-11"}
           />
 
-          {/* Password toggle */}
           {type === "password" && (
             <button
               type="button"
@@ -101,7 +126,6 @@ const SharedInput = ({
         </div>
       )}
 
-      {/* Error message */}
       {error && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
     </div>
   );
