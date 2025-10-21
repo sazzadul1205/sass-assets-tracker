@@ -1,10 +1,10 @@
-// src/app/Employee/layout.jsx
-
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
 
 // Icons
+import { FaRegUser } from "react-icons/fa";
+import { IoLogOutOutline } from "react-icons/io5";
 import { LuUserRoundCheck } from "react-icons/lu";
 import { IoReceiptOutline } from "react-icons/io5";
 import { MdOutlineSpaceDashboard } from "react-icons/md";
@@ -16,7 +16,7 @@ export default function Layout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const menuItems = [
+  const topMenuItems = [
     {
       name: "Dashboard",
       icon: <MdOutlineSpaceDashboard />,
@@ -34,25 +34,66 @@ export default function Layout({ children }) {
     },
   ];
 
+  const bottomMenuItems = [
+    {
+      name: "Profile",
+      icon: <FaRegUser />,
+      path: "/Employee/Profile",
+    },
+    {
+      name: "Logout",
+      icon: <IoLogOutOutline />,
+      path: "/logout",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Navbar */}
       <EmployeeNavbar />
 
-      {/* Main Content */}
+      {/* Main Layout */}
       <main className="flex">
-        {/* Sidebar */}
-        <aside className="w-72 min-h-screen bg-white shadow-md p-3 border-r border-gray-200 pt-5 ">
+        {/* Sidebar (Fixed) */}
+        <aside
+          className="w-72 fixed top-[80px] left-0 bottom-0 bg-white shadow-md p-4 border-r border-gray-200 
+                     flex flex-col justify-between overflow-y-auto" style={{ height: "calc(100vh - 80px)" }}
+        >
+          {/* Top Menu */}
           <ul className="space-y-2 text-gray-700 font-medium">
-            {menuItems.map((item) => {
+            {topMenuItems.map((item) => {
               const isActive = pathname === item.path;
+              return (
+                <li
+                  key={item.name}
+                  onClick={() => router.push(item.path)}
+                  className={`flex items-center gap-3 cursor-pointer rounded-xl py-2.5 px-3 transition-colors
+                    ${isActive
+                      ? "bg-blue-100 text-blue-700 font-semibold"
+                      : "hover:bg-gray-100 hover:text-blue-600"
+                    }`}
+                >
+                  {item.icon}
+                  {item.name}
+                </li>
+              );
+            })}
+          </ul>
+
+
+          {/* Bottom Menu */}
+          <ul className="space-y-2 text-gray-700 font-medium">
+            {bottomMenuItems.map((item) => {
+              const isActive = pathname === item.path;
+              const isLogout = item.name === "Logout";
 
               return (
                 <li
                   key={item.name}
                   onClick={() => router.push(item.path)}
-                  className={`flex items-center gap-2 cursor-pointer rounded-2xl py-2 px-3 transition-colors
-                    ${isActive
+                  className={`flex items-center gap-3 cursor-pointer rounded-xl py-2.5 px-3 transition-colors ${isLogout
+                    ? `text-red-500 hover:text-red-700 hover:bg-red-100`
+                    : isActive
                       ? "bg-blue-100 text-blue-700 font-semibold"
                       : "hover:bg-gray-100 hover:text-blue-600"
                     }`}
@@ -65,8 +106,10 @@ export default function Layout({ children }) {
           </ul>
         </aside>
 
-        {/* Page Content */}
-        <section className="flex-1 p-6">{children}</section>
+        {/* Page Content (Scrollable) */}
+        <section className="flex-1 ml-72 p-6 overflow-y-auto h-[calc(100vh-80px)]">
+          {children}
+        </section>
       </main>
     </div>
   );
