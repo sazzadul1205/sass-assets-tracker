@@ -1,7 +1,10 @@
 // src/app/Employee/MyRequests/page.jsx
 "use client";
 
+import Loading from '@/Shared/Loading/Loading';
 import CreateNewRequestModal from '@/Shared/MyRequests/CreateNewRequestModal/CreateNewRequestModal';
+
+import { useSession } from 'next-auth/react';
 // React components
 import React from 'react';
 
@@ -9,6 +12,13 @@ import React from 'react';
 import { MdAdd } from 'react-icons/md';
 
 const page = () => {
+  const { data: session, status } = useSession();
+
+  // Loading state
+  if (status === "loading") {
+    return <Loading />;
+  }
+
   return (
     <div>
       {/* Top Section */}
@@ -35,7 +45,7 @@ const page = () => {
 
 
       <dialog id="Create_New_Request_Modal" className="modal">
-        <CreateNewRequestModal />
+        <CreateNewRequestModal sessionData={session} />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>
