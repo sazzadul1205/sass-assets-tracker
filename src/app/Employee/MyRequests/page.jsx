@@ -1,26 +1,73 @@
 // src/app/Employee/MyRequests/page.jsx
 "use client";
 
-import Loading from '@/Shared/Loading/Loading';
-import CreateNewRequestModal from '@/Shared/MyRequests/CreateNewRequestModal/CreateNewRequestModal';
-
+// Next Components
 import { useSession } from 'next-auth/react';
+
 // React components
 import React from 'react';
+
+// Packages
+import { useQuery } from '@tanstack/react-query';
 
 // Icons
 import { MdAdd } from 'react-icons/md';
 
+// Shared
+import Error from '@/Shared/Error/Error';
+import Loading from '@/Shared/Loading/Loading';
+import CreateNewRequestModal from '@/Shared/MyRequests/CreateNewRequestModal/CreateNewRequestModal';
+
+// Hooks
+import useAxiosPublic from '@/Hooks/useAxiosPublic';
+
+
 const page = () => {
+  const axiosPublic = useAxiosPublic();
+
+  // Next.js Hooks
   const { data: session, status } = useSession();
 
+  // ------------- Requests Query -------------
+  const {
+    data: requests,
+    error,
+    refetch,
+    isLoading,
+  } = useQuery({
+    queryKey: ["Requests", session?.user?.email],
+    queryFn: () =>
+      axiosPublic
+        .get(`/Requests/${session?.user?.email}`)
+        .then((res) => res.data.requests),
+    enabled: !!session?.user?.email,
+  });
+
   // Loading state
-  if (status === "loading") {
+  if (
+    isLoading,
+    status === "loading"
+  ) {
     return <Loading />;
   }
 
+  // Error state
+  if (error) {
+    console.log(error);
+    // Get a friendly message from the error
+    const errorMessage =
+      typeof error === "string"
+        ? error
+        : error?.response?.data?.message || error?.message || "Something went wrong.";
+
+    return <Error message={errorMessage} />;
+  }
+
+  console.log(requests);
+
+
   return (
-    <div>
+    <div className='p-5' >
       {/* Top Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center ">
         {/* Left Side — Title */}
@@ -45,7 +92,10 @@ const page = () => {
 
 
       <dialog id="Create_New_Request_Modal" className="modal">
-        <CreateNewRequestModal sessionData={session} />
+        <CreateNewRequestModal
+          Refetch={refetch}
+          sessionData={session}
+        />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>

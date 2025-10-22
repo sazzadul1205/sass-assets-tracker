@@ -62,8 +62,8 @@ export default function Layout({ children }) {
         <main className="flex">
           {/* Sidebar (Fixed) */}
           <aside
-            className="w-72 fixed top-[80px] left-0 bottom-0 bg-white shadow-md p-4 border-r border-gray-200 
-                     flex flex-col justify-between overflow-y-auto" style={{ height: "calc(100vh - 80px)" }}
+            className="w-72 fixed top-[65px] left-0 bottom-0 bg-white shadow-md p-4 border-r border-gray-200 
+                     flex flex-col justify-between overflow-y-auto" style={{ height: "calc(100vh - 65px)" }}
           >
             {/* Top Menu */}
             <ul className="space-y-2 text-gray-700 font-medium">
@@ -113,7 +113,7 @@ export default function Layout({ children }) {
           </aside>
 
           {/* Page Content (Scrollable) */}
-          <section className="flex-1 ml-72 p-6 overflow-y-auto h-[calc(100vh-80px)]">
+          <section className="flex-1 ml-72 overflow-y-auto h-[calc(100vh-80px)]">
             {children}
           </section>
         </main>
