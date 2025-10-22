@@ -12,7 +12,11 @@ import { ImCross } from "react-icons/im";
 // Shared
 import SharedInput from '@/Shared/SharedInput/SharedInput';
 
-const CreateNewRequestModal = ({ sessionData }) => {
+// Hooks
+import useAxiosPublic from '@/Hooks/useAxiosPublic';
+
+const CreateNewRequestModal = ({ sessionData, Refetch }) => {
+  const axiosPublic = useAxiosPublic();
 
   // States
   const [error, setError] = useState(null);
@@ -24,16 +28,18 @@ const CreateNewRequestModal = ({ sessionData }) => {
   // Handle Close Function
   const handleClose = () => {
     reset();
-    // Refetch();
+    Refetch();
     setError(null);
     document.getElementById('Create_New_Request_Modal').close();
   }
 
 
+  // Form Submit
   const onSubmit = async (data) => {
     setError(null);
     setIsLoading(true);
 
+    // Payload Creation
     const payload = {
       ...data,
       status: "Pending",
@@ -41,8 +47,10 @@ const CreateNewRequestModal = ({ sessionData }) => {
       created_at: new Date().toISOString(),
     };
 
+    // Try catch block
     try {
-      const res = await axiosPublic.post("/Requests", payload);
+      // API Call
+      const res = await axiosPublic.post("/Requests/", payload);
 
       if (res.status === 200 || res.status === 201) {
         // Success Alert
@@ -56,8 +64,11 @@ const CreateNewRequestModal = ({ sessionData }) => {
           toast: true,
         });
 
+        // Close Modal
         handleClose();
       } else {
+
+        // Error
         throw new Error("Unexpected response from server.");
       }
     } catch (err) {
@@ -276,6 +287,7 @@ const CreateNewRequestModal = ({ sessionData }) => {
           <SharedInput
             label="Expected Work Start Date"
             type="date"
+            dateLimit="future"
             placeholder="Expected Work Start Date"
             name="expected_work_start_date"
             register={register}
@@ -288,6 +300,7 @@ const CreateNewRequestModal = ({ sessionData }) => {
           <SharedInput
             label="Expected Work End Date"
             type="date"
+            dateLimit="future"
             placeholder="Expected Work End Date"
             name="expected_work_end_date"
             register={register}

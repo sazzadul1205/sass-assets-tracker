@@ -26,14 +26,15 @@ const SharedInput = ({
   label,
   type = "text",
   placeholder = "",
-  register, // RHF register function
+  register,
   name,
   error,
   rules = {},
   className = "",
-  control, // optional RHF Controller for date
-  rows = 3, // for textarea
-  options = [], // for select dropdown
+  control,
+  rows = 3,
+  options = [],
+  dateLimit = "past",
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const inputType = type === "password" ? (showPassword ? "text" : "password") : type;
@@ -80,28 +81,37 @@ const SharedInput = ({
         </select>
       ) : type === "date" && control ? (
         // DatePicker
+        // DatePicker
         <Controller
           control={control}
           name={name}
           rules={rules}
-          render={({ field }) => (
-            <div className="relative">
-              <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
-              <DatePicker
-                placeholderText={placeholder || "Select date"}
-                selected={field.value}
-                onChange={field.onChange}
-                dateFormat="dd/MMM/yyyy"
-                showMonthDropdown
-                showYearDropdown
-                dropdownMode="select"
-                maxDate={new Date()}
-                yearDropdownItemNumber={100}
-                scrollableYearDropdown
-                className={`pl-10 ${commonClasses}`}
-              />
-            </div>
-          )}
+          render={({ field }) => {
+            // Handle date restriction
+            let dateProps = {};
+            if (dateLimit === "past") dateProps.maxDate = new Date();
+            else if (dateLimit === "future") dateProps.minDate = new Date();
+            // if "none", no limits added
+
+            return (
+              <div className="relative">
+                <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
+                <DatePicker
+                  placeholderText={placeholder || "Select date"}
+                  selected={field.value}
+                  onChange={field.onChange}
+                  dateFormat="dd/MMM/yyyy"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  yearDropdownItemNumber={100}
+                  scrollableYearDropdown
+                  className={`pl-10 ${commonClasses}`}
+                  {...dateProps}
+                />
+              </div>
+            );
+          }}
         />
       ) : (
         // Regular input
