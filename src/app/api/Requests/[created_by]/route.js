@@ -2,8 +2,8 @@
 import { connectDB } from "@/lib/connectDB";
 import { NextResponse } from "next/server";
 
-export const GET = async (_req, { params }) => {
-  const { created_by } = params;
+export const GET = async (_req, context) => {
+  const { created_by } = await context.params;
 
   if (!created_by) {
     return NextResponse.json(
@@ -22,7 +22,7 @@ export const GET = async (_req, { params }) => {
     const requests = await db
       .collection("Requests")
       .find({ created_by })
-      .sort({ created_at: -1 }) // latest first
+      .sort({ created_at: -1 })
       .toArray();
 
     // Ensure it always returns an array

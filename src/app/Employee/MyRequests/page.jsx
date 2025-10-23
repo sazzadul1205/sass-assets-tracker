@@ -20,6 +20,8 @@ import CreateNewRequestModal from '@/Shared/MyRequests/CreateNewRequestModal/Cre
 
 // Hooks
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
+import RequestStatusCards from '@/Shared/MyRequests/RequestStatusCards/RequestStatusCards';
+import RequestCard from '@/Shared/MyRequests/RequestCard/RequestCard';
 
 
 const page = () => {
@@ -63,9 +65,6 @@ const page = () => {
     return <Error message={errorMessage} />;
   }
 
-  console.log(requests);
-
-
   return (
     <div className='p-5' >
       {/* Top Section */}
@@ -90,7 +89,33 @@ const page = () => {
         </button>
       </div>
 
+      <RequestStatusCards
+        data={{
+          pending: 5,
+          completed: 12,
+          rejected: 2,
+          cancelled: 1,
+          accepted: 8,
+          inProgress: 3,
+        }}
+      />
 
+      {/* Divider */}
+      <div className="flex items-center justify-center my-4">
+        <span className="flex-1 h-px bg-gray-300"></span>
+        <span className="px-4 text-gray-500 font-medium">X</span>
+        <span className="flex-1 h-px bg-gray-300"></span>
+      </div>
+
+
+      {/* Request Cards */}
+      <div className="gap-2 space-y-4 pt-3">
+        {requests?.map((request) => (
+          <RequestCard key={request._id} request={request} />
+        ))}
+      </div>
+
+      {/* Create New Request Modal */}
       <dialog id="Create_New_Request_Modal" className="modal">
         <CreateNewRequestModal
           Refetch={refetch}
