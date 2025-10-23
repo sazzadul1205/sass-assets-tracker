@@ -1,4 +1,4 @@
-// api/Requests/[created_by]/route.js
+// 
 import { connectDB } from "@/lib/connectDB";
 import { NextResponse } from "next/server";
 
