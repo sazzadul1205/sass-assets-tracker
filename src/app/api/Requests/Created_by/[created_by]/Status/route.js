@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 
-export const GET = async (req, { params }) => {
+export const GET = async (_req, { params }) => {
   const { created_by } = params;
 
   // Validate required parameter
