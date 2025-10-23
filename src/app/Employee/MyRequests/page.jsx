@@ -5,7 +5,7 @@
 import { useSession } from 'next-auth/react';
 
 // React components
-import React from 'react';
+import React, { useState } from 'react';
 
 // Packages
 import { useQuery } from '@tanstack/react-query';
@@ -16,54 +16,80 @@ import { MdAdd } from 'react-icons/md';
 // Shared
 import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
+import RequestCard from '@/Shared/MyRequests/RequestCard/RequestCard';
+import RequestStatusCards from '@/Shared/MyRequests/RequestStatusCards/RequestStatusCards';
 import CreateNewRequestModal from '@/Shared/MyRequests/CreateNewRequestModal/CreateNewRequestModal';
 
 // Hooks
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
-import RequestStatusCards from '@/Shared/MyRequests/RequestStatusCards/RequestStatusCards';
-import RequestCard from '@/Shared/MyRequests/RequestCard/RequestCard';
 
 
 const page = () => {
   const axiosPublic = useAxiosPublic();
+
+  // Selected Status
+  const [selectedStatus, setSelectedStatus] = useState(null);
 
   // Next.js Hooks
   const { data: session, status } = useSession();
 
   // ------------- Requests Query -------------
   const {
-    data: requests,
-    error,
-    refetch,
-    isLoading,
+    data: RequestsData,
+    error: RequestsError,
+    refetch: RequestsRefetch,
+    isLoading: RequestsIsLoading,
   } = useQuery({
-    queryKey: ["Requests", session?.user?.email],
+    queryKey: ["RequestsData", session?.user?.email],
     queryFn: () =>
       axiosPublic
-        .get(`/Requests/${session?.user?.email}`)
+        .get(`/Requests/Created_by/${session?.user?.email}`)
         .then((res) => res.data.requests),
     enabled: !!session?.user?.email,
   });
 
-  // Loading state
-  if (
-    isLoading,
-    status === "loading"
-  ) {
+  // ------------- Requests Status Query -------------
+  const {
+    data: RequestsStatusData,
+    error: RequestsStatusError,
+    refetch: RequestsStatusRefetch,
+    isLoading: RequestsStatusIsLoading,
+  } = useQuery({
+    queryKey: ["RequestsStatusData", session?.user?.email],
+    queryFn: async () => {
+      const res = await axiosPublic.get(
+        `/Requests/Created_by/${session?.user?.email}/Status`
+      );
+      return res.data || { success: false, statusCounts: {} };
+    },
+    enabled: !!session?.user?.email,
+  });
+
+
+  // Show loading while fetching requests or status, or if a manual loading flag is set
+  if (RequestsIsLoading || RequestsStatusIsLoading || status === "loading") {
     return <Loading />;
   }
 
-  // Error state
-  if (error) {
-    console.log(error);
-    // Get a friendly message from the error
-    const errorMessage =
-      typeof error === "string"
-        ? error
-        : error?.response?.data?.message || error?.message || "Something went wrong.";
 
+  // Handle error state for multiple sources
+  if (RequestsError || RequestsStatusError) {
+    const activeError = RequestsError || RequestsStatusError;
+    const errorMessage =
+      typeof activeError === "string"
+        ? activeError
+        : activeError?.response?.data?.message ||
+        activeError?.message ||
+        "Something went wrong.";
+    console.error("Error fetching requests or status:", activeError);
     return <Error message={errorMessage} />;
   }
+
+  // Refetch both requests and status data
+  const refetchAll = () => {
+    RequestsRefetch?.();
+    RequestsStatusRefetch?.();
+  };
 
   return (
     <div className='p-5' >
@@ -89,15 +115,11 @@ const page = () => {
         </button>
       </div>
 
+      {/* Status Cards */}
       <RequestStatusCards
-        data={{
-          pending: 5,
-          completed: 12,
-          rejected: 2,
-          cancelled: 1,
-          accepted: 8,
-          inProgress: 3,
-        }}
+        selectedStatus={selectedStatus}
+        setSelectedStatus={setSelectedStatus}
+        RequestsStatusData={RequestsStatusData}
       />
 
       {/* Divider */}
@@ -110,15 +132,15 @@ const page = () => {
 
       {/* Request Cards */}
       <div className="gap-2 space-y-4 pt-3">
-        {requests?.map((request) => (
-          <RequestCard key={request._id} request={request} />
+        {RequestsData?.map((request) => (
+          <RequestCard key={request._id} request={request} Refetch={refetchAll} />
         ))}
       </div>
 
       {/* Create New Request Modal */}
       <dialog id="Create_New_Request_Modal" className="modal">
         <CreateNewRequestModal
-          Refetch={refetch}
+          Refetch={refetchAll}
           sessionData={session}
         />
         <form method="dialog" className="modal-backdrop">
