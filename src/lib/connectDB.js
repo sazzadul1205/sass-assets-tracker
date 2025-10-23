@@ -8,20 +8,24 @@ let cachedDb = null;
  * Ensures a single persistent connection across serverless invocations.
  */
 export async function connectDB() {
+  // Check if cached connection exists
   if (cachedDb) {
-    console.log("🔄 Using existing MongoDB connection");
+    console.log("Using existing MongoDB connection");
     return cachedDb;
   }
 
+  // Get MongoDB environment variables
   const { MONGODB_USER, MONGODB_PASS, MONGODB_CLUSTER, MONGODB_DB } =
     process.env;
 
+  // Check if MongoDB environment variables are defined
   if (!MONGODB_USER || !MONGODB_PASS || !MONGODB_CLUSTER || !MONGODB_DB) {
     throw new Error(
-      "❌ Missing MongoDB environment variables. Please check your .env configuration."
+      "Missing MongoDB environment variables. Please check your .env configuration."
     );
   }
 
+  // Build MongoDB connection URI
   const uri = `mongodb+srv://${encodeURIComponent(
     MONGODB_USER
   )}:${encodeURIComponent(
@@ -31,7 +35,7 @@ export async function connectDB() {
   try {
     // Reuse existing client if connected
     if (cachedClient && cachedClient.topology?.isConnected()) {
-      console.log("✅ Reusing cached MongoDB client");
+      console.log("Reusing cached MongoDB client");
       cachedDb = cachedClient.db(MONGODB_DB);
       return cachedDb;
     }
@@ -43,41 +47,42 @@ export async function connectDB() {
         strict: true,
         deprecationErrors: true,
       },
-      maxPoolSize: 10, // helps control resource usage
-      connectTimeoutMS: 10000, // 10 seconds timeout
+      maxPoolSize: 10,
+      connectTimeoutMS: 10000,
     });
 
     // Connect to MongoDB Atlas
     await client.connect();
-    console.log("✅ Successfully connected to MongoDB Atlas");
+    console.log("Successfully connected to MongoDB Atlas");
 
     // Select database
     const db = client.db(MONGODB_DB);
-    console.log(`📁 Active database: ${db.databaseName}`);
+    console.log(`Active database: ${db.databaseName}`);
 
     // Verify connection
     await db.command({ ping: 1 });
-    console.log("📡 MongoDB connection verified and ready.");
+    console.log("MongoDB connection verified and ready.");
 
     // Cache client and db for reuse
     cachedClient = client;
     cachedDb = db;
 
+    // Return db
     return db;
   } catch (error) {
-    console.error("🚨 MongoDB Connection Error:", error.message);
+    // Log error
+    console.error("MongoDB Connection Error:", error.message);
 
     // Helpful troubleshooting hints
     if (error.message.includes("ENOTFOUND")) {
       console.error(
-        "🌐 Network issue: Unable to resolve MongoDB cluster hostname."
+        "Network issue: Unable to resolve MongoDB cluster hostname."
       );
     } else if (error.message.includes("Authentication failed")) {
-      console.error(
-        "🔑 Authentication error: Check username/password in .env."
-      );
+      console.error("Authentication error: Check username/password in .env.");
     }
 
+    // Throw error
     throw new Error(
       "MongoDB connection failed. Please review your configuration."
     );

@@ -1,4 +1,9 @@
-import React from "react";
+import { useState } from "react";
+
+// Packages
+import Swal from "sweetalert2";
+
+// Icons
 import {
   FaUser,
   FaEnvelope,
@@ -13,19 +18,96 @@ import {
   FaTimesCircle,
   FaPlayCircle,
   FaStopCircle,
+  FaSpinner,
 } from "react-icons/fa";
 import { MdOutlineCategory, MdOutlineAssignmentTurnedIn } from "react-icons/md";
 
-const RequestCard = ({ request, onAccept, onReject, onStart, onCancel, onComplete }) => {
-  const formatDate = (date) => {
-    if (!date) return "N/A";
-    const d = new Date(date);
-    return d.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+// Hooks
+import useAxiosPublic from "@/Hooks/useAxiosPublic";
+
+
+// Utils
+const formatDate = (date) => {
+  if (!date) return "N/A";
+  const d = new Date(date);
+  return d.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+
+const RequestCard = ({ request, Refetch }) => {
+  const axiosPublic = useAxiosPublic();
+
+  // Loading States
+  const [loadingId, setLoadingId] = useState(null);
+
+  // Handle Status Update
+  const handleStatusUpdate = async (id, newStatus) => {
+    // Check if id and newStatus are provided
+    if (!id || !newStatus) return;
+
+    // Update status
+    try {
+      // Loading State
+      setLoadingId(id);
+
+      //  Payload
+      const payload = { status: newStatus };
+
+      // API Call
+      const res = await axiosPublic.put(`/Requests/Id/${id}`, payload);
+
+      // Handle response
+      if (res.data.success) {
+        Swal.fire({
+          icon: "success",
+          title: `Request ${newStatus}`,
+          text: res.data.message || `The request status has been updated to "${newStatus}".`,
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true,
+        });
+
+        // Refresh data if refetch is provided
+        Refetch();
+      } else {
+        // Error Alert
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: res.data.message || `Failed to update the status to "${newStatus}".`,
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2500,
+          timerProgressBar: true,
+        });
+      }
+    } catch (error) {
+      // Error Alert
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data?.message || error.message || "Something went wrong",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+      });
+    } finally {
+      // Loading State
+      setLoadingId(null);
+    }
   };
+
+  // Loading State
+  const isLoading = loadingId === request._id;
 
   return (
     <div className="w-full text-gray-900 bg-white shadow-md rounded-2xl border border-gray-200 hover:shadow-xl transition-all duration-300 overflow-hidden">
@@ -176,20 +258,22 @@ const RequestCard = ({ request, onAccept, onReject, onStart, onCancel, onComplet
         {/* Pending Actions */}
         {request.status === "Pending" && (
           <>
-            {/* Accept Button */}
             <button
-              onClick={() => onAccept?.(request)}
-              className="flex items-center gap-2 px-10 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+              onClick={() => handleStatusUpdate(request._id, "Accepted")}
+              disabled={isLoading}
+              className={`flex items-center gap-2 px-10 py-2 rounded-lg text-white transition ${isLoading ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+                }`}
             >
-              <FaCheckCircle /> Accept
+              {isLoading ? <FaSpinner className="animate-spin" /> : <FaCheckCircle />} Accept
             </button>
 
-            {/* Reject Button */}
             <button
-              onClick={() => onReject?.(request)}
-              className="flex items-center gap-2 px-10 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
+              onClick={() => handleStatusUpdate(request._id, "Rejected")}
+              disabled={isLoading}
+              className={`flex items-center gap-2 px-10 py-2 rounded-lg text-white transition ${isLoading ? "bg-red-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
+                }`}
             >
-              <FaTimesCircle /> Reject
+              {isLoading ? <FaSpinner className="animate-spin" /> : <FaTimesCircle />} Reject
             </button>
           </>
         )}
@@ -197,20 +281,22 @@ const RequestCard = ({ request, onAccept, onReject, onStart, onCancel, onComplet
         {/* Accepted Actions */}
         {request.status === "Accepted" && (
           <>
-            {/* Start Work Button */}
             <button
-              onClick={() => onStart?.(request)}
-              className="flex items-center gap-2 px-10 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              onClick={() => handleStatusUpdate(request._id, "Working On")}
+              disabled={isLoading}
+              className={`flex items-center gap-2 px-10 py-2 rounded-lg text-white transition ${isLoading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+                }`}
             >
-              <FaPlayCircle /> Start Work
+              {isLoading ? <FaSpinner className="animate-spin" /> : <FaPlayCircle />} Start Work
             </button>
 
-            {/* Cancel Button */}
             <button
-              onClick={() => onCancel?.(request)}
-              className="flex items-center gap-2 px-10 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
+              onClick={() => handleStatusUpdate(request._id, "Canceled")}
+              disabled={isLoading}
+              className={`flex items-center gap-2 px-10 py-2 rounded-lg text-white transition ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-600 hover:bg-gray-700"
+                }`}
             >
-              <FaTimesCircle /> Cancel
+              {isLoading ? <FaSpinner className="animate-spin" /> : <FaTimesCircle />} Cancel
             </button>
           </>
         )}
@@ -218,20 +304,22 @@ const RequestCard = ({ request, onAccept, onReject, onStart, onCancel, onComplet
         {/* Working On Actions */}
         {request.status === "Working On" && (
           <>
-            {/* Complete Button */}
             <button
-              onClick={() => onComplete?.(request)}
-              className="flex items-center gap-2 px-10 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+              onClick={() => handleStatusUpdate(request._id, "Completed")}
+              disabled={isLoading}
+              className={`flex items-center gap-2 px-10 py-2 rounded-lg text-white transition ${isLoading ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+                }`}
             >
-              <FaCheckCircle /> Complete
+              {isLoading ? <FaSpinner className="animate-spin" /> : <FaCheckCircle />} Complete
             </button>
 
-            {/* Cancel Button */}
             <button
-              onClick={() => onCancel?.(request)}
-              className="flex items-center gap-2 px-10 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
+              onClick={() => handleStatusUpdate(request._id, "Canceled")}
+              disabled={isLoading}
+              className={`flex items-center gap-2 px-10 py-2 rounded-lg text-white transition ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-600 hover:bg-gray-700"
+                }`}
             >
-              <FaStopCircle /> Cancel
+              {isLoading ? <FaSpinner className="animate-spin" /> : <FaStopCircle />} Cancel
             </button>
           </>
         )}
