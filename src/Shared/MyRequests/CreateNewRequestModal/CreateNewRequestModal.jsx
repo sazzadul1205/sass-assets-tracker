@@ -22,8 +22,14 @@ const CreateNewRequestModal = ({ sessionData, Refetch }) => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // React Hooks
-  const { register, handleSubmit, control, reset, formState: { errors } } = useForm();
+  // React Hooks Form
+  const {
+    reset,
+    control,
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm();
 
   // Handle Close Function
   const handleClose = () => {
@@ -33,51 +39,65 @@ const CreateNewRequestModal = ({ sessionData, Refetch }) => {
     document.getElementById('Create_New_Request_Modal').close();
   }
 
-
   // Form Submit
   const onSubmit = async (data) => {
     setError(null);
     setIsLoading(true);
 
-    // Payload Creation
+    // --- Build request payload ---
     const payload = {
       ...data,
       status: "Pending",
-      created_by: sessionData?.user?.email,
       created_at: new Date().toISOString(),
+      created_by: sessionData?.user?.email || "unknown",
     };
 
-    // Try catch block
     try {
-      // API Call
+      // --- Create Request ---
       const res = await axiosPublic.post("/Requests/", payload);
 
-      if (res.status === 200 || res.status === 201) {
-        // Success Alert
-        Swal.fire({
-          icon: "success",
-          title: "Request Created",
-          text: "Your new request has been submitted successfully.",
-          position: "top-start",
-          showConfirmButton: false,
-          timer: 2000,
-          toast: true,
-        });
-
-        // Close Modal
-        handleClose();
-      } else {
-
-        // Error
-        throw new Error("Unexpected response from server.");
+      // --- Handle Response ---
+      if (res.status !== 200 && res.status !== 201) {
+        throw new Error(res.data?.message || "Failed to create request");
       }
+
+      // --- Build log payload ---
+      const logPayload = {
+        request_id: res?.data?.data?.insertedId || null,
+        action: "Created new request",
+        logged_by: sessionData?.user?.email || "unknown",
+        logged_by_role: sessionData?.user?.role || "unknown",
+        logged_at: new Date().toISOString(),
+        details: {
+          request_title: data?.request_title,
+          priority: data?.priority,
+        },
+      };
+
+      // --- Create Log Entry ---
+      await axiosPublic.post("/Log/", logPayload);
+
+      // --- Show Success Message ---
+      Swal.fire({
+        icon: "success",
+        title: "Request Created",
+        text: "Your new request has been submitted successfully.",
+        position: "top-start",
+        showConfirmButton: false,
+        timer: 2000,
+        toast: true,
+      });
+
+      // --- Close Modal ---
+      handleClose();
     } catch (err) {
-      // Error handling
+      console.error("Error submitting form:", err);
       setError(err.response?.data?.message || err.message || "Something went wrong");
     } finally {
       setIsLoading(false);
     }
   };
+
 
 
   return (
@@ -388,18 +408,18 @@ const CreateNewRequestModal = ({ sessionData, Refetch }) => {
         />
 
         {/* Submit Button */}
-        {/* Submit Button */}
         <div className="flex justify-end pt-4">
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-1/3 py-3 rounded-lg text-white font-semibold shadow-md 
-      transition-all duration-300 transform hover:-translate-y-0.5 
-      focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1
-      ${isLoading
+            className={`w-1/3 py-3 rounded-lg text-white font-semibold shadow-md  
+              transition-all duration-300 transform hover:-translate-y-0.5 
+              focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 
+              ${isLoading
                 ? "bg-blue-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 hover:shadow-lg"
-              }`}
+              }`
+            }
           >
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">

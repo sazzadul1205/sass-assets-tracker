@@ -38,7 +38,7 @@ const formatDate = (date) => {
 };
 
 
-const RequestCard = ({ request, Refetch }) => {
+const RequestCard = ({ request, Refetch, sessionData }) => {
   const axiosPublic = useAxiosPublic();
 
   // Loading States
@@ -46,50 +46,51 @@ const RequestCard = ({ request, Refetch }) => {
 
   // Handle Status Update
   const handleStatusUpdate = async (id, newStatus) => {
-    // Check if id and newStatus are provided
     if (!id || !newStatus) return;
 
-    // Update status
     try {
-      // Loading State
       setLoadingId(id);
 
-      //  Payload
-      const payload = { status: newStatus };
+      // --- Update Request Status ---
+      const res = await axiosPublic.put(`/Requests/Id/${id}`, { status: newStatus });
 
-      // API Call
-      const res = await axiosPublic.put(`/Requests/Id/${id}`, payload);
-
-      // Handle response
-      if (res.data.success) {
-        Swal.fire({
-          icon: "success",
-          title: `Request ${newStatus}`,
-          text: res.data.message || `The request status has been updated to "${newStatus}".`,
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 2000,
-          timerProgressBar: true,
-        });
-
-        // Refresh data if refetch is provided
-        Refetch();
-      } else {
-        // Error Alert
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: res.data.message || `Failed to update the status to "${newStatus}".`,
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 2500,
-          timerProgressBar: true,
-        });
+      if (!res.data.success) {
+        throw new Error(res.data.message || `Failed to update status to "${newStatus}"`);
       }
+
+      // --- Log Action ---
+      const logPayload = {
+        request_id: id,
+        action: `Status updated to "${newStatus}"`,
+        logged_by: sessionData?.user?.email || "unknown",
+        logged_by_role: sessionData?.user?.role || "unknown",
+        logged_at: new Date().toISOString(),
+        details: {
+          request_title: request?.request_title,
+          previous_status: request?.status,
+          new_status: newStatus,
+          priority: request?.priority,
+        },
+      };
+
+      // --- Create Log ---
+      await axiosPublic.post("/Log/", logPayload);
+
+      // Success Message
+      Swal.fire({
+        icon: "success",
+        title: `Request ${newStatus}`,
+        text: res.data.message || `The request status has been updated successfully.`,
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
+
+      Refetch?.();
     } catch (error) {
-      // Error Alert
+      console.error("Status update error:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -101,7 +102,6 @@ const RequestCard = ({ request, Refetch }) => {
         timerProgressBar: true,
       });
     } finally {
-      // Loading State
       setLoadingId(null);
     }
   };
