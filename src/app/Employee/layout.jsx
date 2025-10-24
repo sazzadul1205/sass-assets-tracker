@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 // Icons
 import { FaRegUser } from "react-icons/fa";
+import { BsReceipt } from "react-icons/bs";
 import { IoLogOutOutline } from "react-icons/io5";
 import { LuUserRoundCheck } from "react-icons/lu";
 import { IoReceiptOutline } from "react-icons/io5";
@@ -25,6 +26,11 @@ export default function Layout({ children }) {
       name: "Dashboard",
       icon: <MdOutlineSpaceDashboard />,
       path: "/Employee/Dashboard",
+    },
+    {
+      name: "Asset Recept",
+      icon: <BsReceipt />,
+      path: "/Employee/AssetRecept",
     },
     {
       name: "My Assets",

@@ -69,7 +69,11 @@ const Page = () => {
   });
 
   // Loading Handler
-  if (RequestsIsLoading || RequestsStatusIsLoading || status === "loading") return <Loading />;
+  if (
+    RequestsIsLoading ||
+    RequestsStatusIsLoading ||
+    status === "loading"
+  ) return <Loading />;
 
   // Error Handler
   if (RequestsError || RequestsStatusError) {
@@ -204,7 +208,12 @@ const Page = () => {
 
             {/* Request Cards */}
             {paginatedData.map((request) => (
-              <RequestCard key={request._id} request={request} Refetch={refetchAll} />
+              <RequestCard
+                key={request._id}
+                request={request}
+                Refetch={refetchAll}
+                sessionData={session}
+              />
             ))}
 
             {/* Pagination (only show if more than 5 requests) */}
