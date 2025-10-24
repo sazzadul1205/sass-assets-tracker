@@ -18,9 +18,9 @@ const RequestStatusCards = ({
     { title: "Pending", subtitle: "Requests waiting for approval", count: counts.Pending || 0, icon: <FaClock />, color: "yellow" },
     { title: "Completed", subtitle: "Requests successfully completed", count: counts.Completed || 0, icon: <FaCheckCircle />, color: "green" },
     { title: "Rejected", subtitle: "Requests that were rejected", count: counts.Rejected || 0, icon: <FaTimesCircle />, color: "red" },
-    { title: "Cancelled", subtitle: "Requests that were cancelled", count: counts.Canceled || 0, icon: <FaBan />, color: "gray" },
+    { title: "Canceled", subtitle: "Requests that were cancelled", count: counts.Canceled || 0, icon: <FaBan />, color: "gray" },
     { title: "Accepted", subtitle: "Requests that are accepted", count: counts.Accepted || 0, icon: <FaThumbsUp />, color: "blue" },
-    { title: "Work In Progress", subtitle: "Requests currently in progress", count: counts["Working On"] || 0, icon: <FaSpinner className="animate-spin" />, color: "indigo" },
+    { title: "Working On", subtitle: "Requests currently in progress", count: counts["Working On"] || 0, icon: <FaSpinner className="animate-spin" />, color: "indigo" },
   ];
 
   // Color Classes
