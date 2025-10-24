@@ -1,6 +1,9 @@
 // src/app/Employee/AssetRecept/page.jsx
 "use client";
 
+// React components
+import { useState } from 'react';
+
 // Next components
 import { useSession } from 'next-auth/react';
 
@@ -12,10 +15,13 @@ import { FaEye, FaFileInvoiceDollar, FaBoxOpen } from "react-icons/fa";
 
 // Hooks
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
+
+// Shared
 import Loading from '@/Shared/Loading/Loading';
 import Error from '@/Shared/Error/Error';
+
+// Modals
 import ViewRequestModal from '@/Shared/MyAssets/ViewRequestModal/ViewRequestModal';
-import { useState } from 'react';
 import GenerateReceiptModal from '@/Shared/AssetRecept/GenerateReceiptModal/GenerateReceiptModal';
 
 // Map priorities to styles
@@ -49,15 +55,52 @@ const page = () => {
     keepPreviousData: true,
   });
 
+  // Assuming RequestsData is your array
+  const requestIds = RequestsData?.map(request => request._id) || [];
+
+  // ---------- Receipts Query ----------
+  const {
+    data: ReceiptsData,
+    error: ReceiptsError,
+    refetch: ReceiptsRefetch,
+    isLoading: ReceiptsIsLoading,
+  } = useQuery({
+    queryKey: ["ReceiptsData", requestIds],
+    queryFn: async () => {
+      if (!requestIds || requestIds.length === 0) return []; // early return if no IDs
+
+      const idsQuery = requestIds.join(",");
+      const res = await axiosPublic.get(`/Receipts/MultiFetch?request_ids=${idsQuery}`);
+      return res.data.data; // assuming your API returns { success, data }
+    },
+    enabled: !!session?.user?.email && requestIds?.length > 0, // only fetch if user email exists and there are IDs
+    keepPreviousData: true,
+  });
+
+  // Safe receipts map
+  const receiptsMap = (ReceiptsData || []).reduce((acc, receipt) => {
+    acc[receipt.request_id] = receipt;
+    return acc;
+  }, {});
+
+  // Merge receipts into requests safely
+  const mergedData = (RequestsData || []).map(request => {
+    return {
+      ...request,
+      receipt: receiptsMap[request._id] || null
+    };
+  });
+
   // Loading Handler
   if (
     RequestsIsLoading ||
+    ReceiptsIsLoading ||
     status === "loading"
   ) return <Loading />;
 
   // Error Handler
-  if (RequestsError) {
-    const activeError = RequestsError;
+  if (RequestsError || ReceiptsError) {
+    const activeError = RequestsError || ReceiptsError;
     const errorMessage =
       typeof activeError === "string"
         ? activeError
@@ -67,6 +110,12 @@ const page = () => {
     console.error("Error fetching requests or status:", activeError);
     return <Error message={errorMessage} />;
   }
+
+  // Refetch Handler
+  const RefetchAll = () => {
+    RequestsRefetch();
+    ReceiptsRefetch();
+  };
 
   return (
     <div className="p-5">
@@ -107,8 +156,8 @@ const page = () => {
 
           {/* Table Body */}
           <tbody>
-            {RequestsData && RequestsData.length > 0 ? (
-              RequestsData.map((item, index) => (
+            {mergedData && mergedData.length > 0 ? (
+              mergedData.map((item, index) => (
                 <tr
                   key={item._id}
                   className="border-t border-gray-200 hover:bg-gray-50"
@@ -140,7 +189,7 @@ const page = () => {
                   {/* Action Buttons */}
                   <td className="px-5 py-3 text-center">
                     <div className="flex justify-center gap-3">
-                      {/* View Button */}
+                      {/* View Request Button */}
                       <button
                         onClick={() => {
                           setSelectedAsset(item);
@@ -152,19 +201,33 @@ const page = () => {
                         View
                       </button>
 
-                      {/* Generate Receipt Button */}
-                      <button
-                        onClick={() => {
-                          setSelectedAsset(item);
-                          document.getElementById("Generate_Receipt_Modal").showModal();
-                        }}
-                        className="flex items-center justify-center gap-3 px-5 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 active:scale-95 transition-all"
-                      >
-                        <FaFileInvoiceDollar size={16} />
-                        Generate
-                      </button>
+                      {/* Generate or View Receipt Button */}
+                      {item.receipt ? (
+                        <button
+                          onClick={() => {
+                            setSelectedAsset(item);
+                            document.getElementById("View_Receipt_Modal").showModal(); // open receipt modal
+                          }}
+                          className="flex items-center justify-center gap-3 px-5 py-2 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 active:scale-95 transition-all"
+                        >
+                          <FaEye size={16} />
+                          View Receipt
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setSelectedAsset(item);
+                            document.getElementById("Generate_Receipt_Modal").showModal(); // open generate modal
+                          }}
+                          className="flex items-center justify-center gap-3 px-5 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 active:scale-95 transition-all"
+                        >
+                          <FaFileInvoiceDollar size={16} />
+                          Generate
+                        </button>
+                      )}
                     </div>
                   </td>
+
 
                 </tr>
               ))
@@ -197,8 +260,8 @@ const page = () => {
       {/* Create New Request Modal */}
       <dialog id="Generate_Receipt_Modal" className="modal">
         <GenerateReceiptModal
+          refetch={RefetchAll}
           sessionData={session}
-          refetch={RequestsRefetch}
           selectedAsset={selectedAsset}
           setSelectedAsset={setSelectedAsset}
         />
