@@ -22,13 +22,22 @@ export const GET = async (req, context) => {
     // Connect to database
     const db = await connectDB();
 
-    // Build query
+    // Build base query
     const query = { created_by };
 
-    // If status is provided, filter by status
+    // If status is provided and not "all", format properly
     if (status && status.toLowerCase() !== "all") {
+      // Handle multi-word statuses (like "Working On")
+      const formattedStatus = status
+        .split(" ")
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
+        .join(" ");
+
+      // Normalize "cancelled" and "canceled"
       query.status =
-        status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+        formattedStatus === "Cancelled" ? "Canceled" : formattedStatus;
     }
 
     // Fetch requests

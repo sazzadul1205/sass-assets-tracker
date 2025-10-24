@@ -5,7 +5,6 @@ import { connectDB } from "@/lib/connectDB";
 export const GET = async (_req, { params }) => {
   const { created_by } = params;
 
-  // Validate required parameter
   if (!created_by) {
     return NextResponse.json(
       { success: false, message: "Missing 'created_by' parameter" },
@@ -14,33 +13,57 @@ export const GET = async (_req, { params }) => {
   }
 
   try {
-    // Connect to database
     const db = await connectDB();
 
-    // Aggregate requests by their status
-    const pipeline = [
-      { $match: { created_by } },
-      {
-        $group: {
-          _id: "$status", // group by status
-          count: { $sum: 1 }, // count how many per status
-        },
-      },
-    ];
-
-    const results = await db
+    // Fetch all requests for this user
+    const requests = await db
       .collection("Requests")
-      .aggregate(pipeline)
+      .find({ created_by })
       .toArray();
 
-    // Convert aggregation array into an object
-    // Example: [{_id: "Pending", count: 2}] → { Pending: 2 }
-    const statusCounts = results.reduce((acc, cur) => {
-      acc[cur._id] = cur.count;
-      return acc;
-    }, {});
+    // Define your official app statuses
+    const validStatuses = [
+      "Pending",
+      "Completed",
+      "Rejected",
+      "Canceled",
+      "Accepted",
+      "Working On",
+    ];
 
-    // Return response
+    // Initialize all counts with 0
+    const statusCounts = validStatuses.reduce(
+      (acc, s) => {
+        acc[s] = 0;
+        return acc;
+      },
+      { Unmatched: 0 }
+    );
+
+    // Loop and normalize statuses
+    for (const req of requests) {
+      let status = (req.status || "").trim().toLowerCase();
+
+      // Normalize similar spellings / synonyms
+      if (["cancelled", "canceled"].includes(status)) status = "Canceled";
+      else if (["working on", "in progress", "ongoing"].includes(status))
+        status = "Working On";
+      else if (["done", "completed", "finished"].includes(status))
+        status = "Completed";
+      else if (["pending", "awaiting", "waiting"].includes(status))
+        status = "Pending";
+      else if (["rejected", "declined"].includes(status)) status = "Rejected";
+      else if (["accepted", "approved"].includes(status)) status = "Accepted";
+      else status = null; // mark as unknown
+
+      // Count
+      if (status && validStatuses.includes(status)) {
+        statusCounts[status]++;
+      } else {
+        statusCounts.Unmatched++;
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: "Status counts fetched successfully",
