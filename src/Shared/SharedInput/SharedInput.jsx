@@ -1,74 +1,83 @@
 "use client";
 
-// React components
-import React, { useState } from "react";
+// React
+import { useState } from "react";
+
+// React Hook Form
+import { Controller } from "react-hook-form";
 
 // Icons
 import { FaEye, FaEyeSlash, FaCalendarAlt } from "react-icons/fa";
 
-// Packages
+// Datepicker
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
-// RHF
-import { Controller } from "react-hook-form";
 
 /**
  * SharedInput
  * Reusable input supporting:
- * - text, password, email, number, etc.
- * - textarea with configurable rows
- * - datepicker via react-hook-form Controller
- * - select dropdown (options from parent)
+ * - text, password, email, number
+ * - textarea
+ * - select
+ * - datepicker
  * - error display
  */
 const SharedInput = ({
-  label,
-  type = "text",
-  placeholder = "",
-  register,
+  min,
+  max,
+  step,
   name,
+  label,
   error,
-  rules = {},
-  className = "",
   control,
+  register,
   rows = 3,
+  rules = {},
   options = [],
+  type = "text",
+  className = "",
+  placeholder = "",
+  readOnly = false,
   dateLimit = "past",
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const inputType = type === "password" ? (showPassword ? "text" : "password") : type;
 
-  const commonClasses = `w-full px-4 py-2.5 border rounded-lg text-gray-800 placeholder-gray-400 focus:ring-4 outline-none transition-all ${error
-    ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-    : "border-gray-400 focus:border-blue-500 focus:ring-blue-100"
-    }`;
+  const baseClasses = `w-full px-4 py-2.5 border rounded-lg text-gray-800 placeholder-gray-400 focus:ring-4 outline-none transition-all
+    ${error ? "border-red-500 focus:border-red-500 focus:ring-red-100" : "border-gray-400 focus:border-blue-500 focus:ring-blue-100"}
+  `;
 
+  // Render logic
   return (
     <div className={`w-full ${className}`}>
+      {/* Label & Error */}
       {label && (
-        <label className="text-md block mb-2">
-          <span className="font-semibold text-gray-700">
-            {label}
-            {rules?.required && <span className="text-red-500 ml-1">*</span>}
-          </span>
+        <label className="block mb-2 text-md font-semibold text-gray-700">
+          {label}
+          {rules?.required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
 
-      {/* Textarea */}
+      {/* Input */}
       {type === "textarea" ? (
         <textarea
           placeholder={placeholder}
           rows={rows}
+          readOnly={readOnly}
           {...(register ? register(name, rules) : {})}
-          className={commonClasses + " resize-none"}
+          className={`${baseClasses} resize-none min-h-[80px] max-h-[300px] overflow-y-auto`}
+          onInput={(e) => {
+            // Auto-resize for better UX
+            e.target.style.height = "auto";
+            e.target.style.height = e.target.scrollHeight + "px";
+          }}
         />
       ) : type === "select" ? (
-        // Dropdown select
         <select
           {...(register ? register(name, rules) : {})}
-          className={commonClasses}
+          className={baseClasses}
           defaultValue=""
+          disabled={readOnly}
         >
           <option value="" disabled>
             {placeholder || "Select an option"}
@@ -80,19 +89,14 @@ const SharedInput = ({
           ))}
         </select>
       ) : type === "date" && control ? (
-        // DatePicker
-        // DatePicker
         <Controller
           control={control}
           name={name}
           rules={rules}
           render={({ field }) => {
-            // Handle date restriction
             let dateProps = {};
             if (dateLimit === "past") dateProps.maxDate = new Date();
             else if (dateLimit === "future") dateProps.minDate = new Date();
-            // if "none", no limits added
-
             return (
               <div className="relative">
                 <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
@@ -106,7 +110,7 @@ const SharedInput = ({
                   dropdownMode="select"
                   yearDropdownItemNumber={100}
                   scrollableYearDropdown
-                  className={`pl-10 ${commonClasses}`}
+                  className={`pl-10 ${baseClasses}`}
                   {...dateProps}
                 />
               </div>
@@ -114,20 +118,22 @@ const SharedInput = ({
           }}
         />
       ) : (
-        // Regular input
         <div className="relative">
           <input
             type={inputType}
             placeholder={placeholder}
+            readOnly={readOnly}
+            min={type === "number" ? min : undefined}
+            max={type === "number" ? max : undefined}
+            step={type === "number" ? step || "any" : undefined}
             {...(register ? register(name, rules) : {})}
-            className={commonClasses + " pr-11"}
+            className={baseClasses + (type === "password" ? " pr-11" : "")}
           />
-
           {type === "password" && (
             <button
               type="button"
               tabIndex={-1}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
@@ -136,6 +142,7 @@ const SharedInput = ({
         </div>
       )}
 
+      {/* Error */}
       {error && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
     </div>
   );
