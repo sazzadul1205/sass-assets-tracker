@@ -11,7 +11,7 @@ import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
 
 // Icons
-import { MdAdd } from "react-icons/md";
+import { MdAdd, MdOutlineAssignment } from "react-icons/md";
 import { FaChevronLeft, FaChevronRight, FaInbox, FaSearch } from "react-icons/fa";
 
 // Hooks
@@ -114,17 +114,18 @@ const Page = () => {
   return (
     <div className="p-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <div>
-          <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            📋 My Requests
+          <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-800 flex items-center gap-2">
+            <MdOutlineAssignment size={28} className="text-blue-600" />
+            My Requests
           </h3>
-          <p className="text-gray-500 mt-1 text-sm sm:text-base">
-            Manage & Track Your Requests easily in one place.
+          <p className="mt-1 text-gray-500 text-sm sm:text-base">
+            Manage & track all your requests in one place.
           </p>
 
           {/* Tip */}
-          <p className="text-xs text-gray-400 mt-1 italic">
+          <p className="mt-2 text-xs sm:text-sm text-gray-400 italic">
             Tip: Click on a request card below to quickly filter and view related requests.
           </p>
         </div>
