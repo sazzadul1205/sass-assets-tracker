@@ -22,6 +22,7 @@ import Error from '@/Shared/Error/Error';
 
 // Modals
 import ViewRequestModal from '@/Shared/MyAssets/ViewRequestModal/ViewRequestModal';
+import ViewReceiptModal from '@/Shared/AssetRecept/ViewReceiptModal/ViewReceiptModal';
 import GenerateReceiptModal from '@/Shared/AssetRecept/GenerateReceiptModal/GenerateReceiptModal';
 
 // Map priorities to styles
@@ -67,15 +68,31 @@ const page = () => {
   } = useQuery({
     queryKey: ["ReceiptsData", requestIds],
     queryFn: async () => {
-      if (!requestIds || requestIds.length === 0) return []; // early return if no IDs
+      if (!requestIds || requestIds.length === 0) return [];
 
       const idsQuery = requestIds.join(",");
       const res = await axiosPublic.get(`/Receipts/MultiFetch?request_ids=${idsQuery}`);
-      return res.data.data; // assuming your API returns { success, data }
+      return res.data.data;
     },
-    enabled: !!session?.user?.email && requestIds?.length > 0, // only fetch if user email exists and there are IDs
+    enabled: !!session?.user?.email && requestIds?.length > 0,
     keepPreviousData: true,
   });
+
+  // ---------- Users Data Query ----------
+  const {
+    data: UserData,
+    isLoading: UserIsLoading,
+    refetch: UserRefetch,
+    error: UserError,
+  } = useQuery({
+    queryKey: ["UserData", session?.user?.email],
+    queryFn: () =>
+      axiosPublic
+        .get(`/Users/${session?.user?.email}`)
+        .then((res) => res.data.user),
+    enabled: !!session?.user?.email,
+  });
+
 
   // Safe receipts map
   const receiptsMap = (ReceiptsData || []).reduce((acc, receipt) => {
@@ -93,14 +110,15 @@ const page = () => {
 
   // Loading Handler
   if (
+    UserIsLoading ||
     RequestsIsLoading ||
     ReceiptsIsLoading ||
     status === "loading"
   ) return <Loading />;
 
   // Error Handler
-  if (RequestsError || ReceiptsError) {
-    const activeError = RequestsError || ReceiptsError;
+  if (RequestsError || ReceiptsError || UserError) {
+    const activeError = RequestsError || ReceiptsError || UserError;
     const errorMessage =
       typeof activeError === "string"
         ? activeError
@@ -113,6 +131,7 @@ const page = () => {
 
   // Refetch Handler
   const RefetchAll = () => {
+    UserRefetch();
     RequestsRefetch();
     ReceiptsRefetch();
   };
@@ -195,7 +214,7 @@ const page = () => {
                           setSelectedAsset(item);
                           document.getElementById("View_Request_Modal").showModal();
                         }}
-                        className="flex items-center justify-center gap-3 px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 active:scale-95 transition-all"
+                        className="flex-1 flex items-center justify-center gap-2 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 active:scale-95 transition-all"
                       >
                         <FaEye size={16} />
                         View
@@ -206,9 +225,9 @@ const page = () => {
                         <button
                           onClick={() => {
                             setSelectedAsset(item);
-                            document.getElementById("View_Receipt_Modal").showModal(); // open receipt modal
+                            document.getElementById("View_Receipt_Modal").showModal();
                           }}
-                          className="flex items-center justify-center gap-3 px-5 py-2 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 active:scale-95 transition-all"
+                          className="flex-1 flex items-center justify-center gap-2 py-2 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 active:scale-95 transition-all"
                         >
                           <FaEye size={16} />
                           View Receipt
@@ -217,9 +236,9 @@ const page = () => {
                         <button
                           onClick={() => {
                             setSelectedAsset(item);
-                            document.getElementById("Generate_Receipt_Modal").showModal(); // open generate modal
+                            document.getElementById("Generate_Receipt_Modal").showModal();
                           }}
-                          className="flex items-center justify-center gap-3 px-5 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 active:scale-95 transition-all"
+                          className="flex-1 flex items-center justify-center gap-2 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 active:scale-95 transition-all"
                         >
                           <FaFileInvoiceDollar size={16} />
                           Generate
@@ -227,7 +246,6 @@ const page = () => {
                       )}
                     </div>
                   </td>
-
 
                 </tr>
               ))
@@ -262,6 +280,18 @@ const page = () => {
         <GenerateReceiptModal
           refetch={RefetchAll}
           sessionData={session}
+          selectedAsset={selectedAsset}
+          setSelectedAsset={setSelectedAsset}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* Create New Request Modal */}
+      <dialog id="View_Receipt_Modal" className="modal">
+        <ViewReceiptModal
+          UserData={UserData}
           selectedAsset={selectedAsset}
           setSelectedAsset={setSelectedAsset}
         />
