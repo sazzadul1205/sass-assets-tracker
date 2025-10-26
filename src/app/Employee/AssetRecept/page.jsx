@@ -21,9 +21,9 @@ import Loading from '@/Shared/Loading/Loading';
 import Error from '@/Shared/Error/Error';
 
 // Modals
-import ViewRequestModal from '@/Shared/MyAssets/ViewRequestModal/ViewRequestModal';
-import ViewReceiptModal from '@/Shared/AssetRecept/ViewReceiptModal/ViewReceiptModal';
-import GenerateReceiptModal from '@/Shared/AssetRecept/GenerateReceiptModal/GenerateReceiptModal';
+import ViewRequestModal from '@/Shared/Employee/MyAssets/ViewRequestModal/ViewRequestModal';
+import ViewReceiptModal from '@/Shared/Employee/AssetRecept/ViewReceiptModal/ViewReceiptModal';
+import GenerateReceiptModal from '@/Shared/Employee/AssetRecept/GenerateReceiptModal/GenerateReceiptModal';
 
 // Map priorities to styles
 const priorityStyles = {

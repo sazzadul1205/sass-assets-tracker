@@ -20,9 +20,12 @@ import useAxiosPublic from "@/Hooks/useAxiosPublic";
 // Shared
 import Error from "@/Shared/Error/Error";
 import Loading from "@/Shared/Loading/Loading";
-import RequestCard from "@/Shared/MyRequests/RequestCard/RequestCard";
-import RequestStatusCards from "@/Shared/MyRequests/RequestStatusCards/RequestStatusCards";
-import CreateNewRequestModal from "@/Shared/MyRequests/CreateNewRequestModal/CreateNewRequestModal";
+import RequestCard from "@/Shared/Employee/MyRequests/RequestCard/RequestCard";
+import RequestStatusCards from "@/Shared/Employee/MyRequests/RequestStatusCards/RequestStatusCards";
+
+// Modals
+import CreateNewRequestModal from "@/Shared/Employee/MyRequests/CreateNewRequestModal/CreateNewRequestModal";
+
 
 const Page = () => {
   const axiosPublic = useAxiosPublic();
@@ -293,7 +296,10 @@ const Page = () => {
 
       {/* Create New Request Modal */}
       <dialog id="Create_New_Request_Modal" className="modal">
-        <CreateNewRequestModal Refetch={refetchAll} sessionData={session} />
+        <CreateNewRequestModal
+          Refetch={refetchAll}
+          sessionData={session}
+        />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
         </form>

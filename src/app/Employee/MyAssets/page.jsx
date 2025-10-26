@@ -22,10 +22,11 @@ import useAxiosPublic from '@/Hooks/useAxiosPublic';
 // Shared
 import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
-import TableItem from '@/Shared/MyAssets/TableItems/TableItems';
+import TableItem from '@/Shared/Employee/MyAssets/TableItems/TableItems';
+
 
 // Modal
-import ViewRequestModal from '@/Shared/MyAssets/ViewRequestModal/ViewRequestModal';
+import ViewRequestModal from '@/Shared/Employee/MyAssets/ViewRequestModal/ViewRequestModal';
 
 
 // Options
