@@ -1,7 +1,16 @@
-import { FaClock, FaCheckCircle, FaTimesCircle, FaBan, FaThumbsUp, FaSpinner } from "react-icons/fa";
+// Icons
+import {
+  FaBan,
+  FaClock,
+  FaSpinner,
+  FaThumbsUp,
+  FaTimesCircle,
+  FaCheckCircle
+} from "react-icons/fa";
 
 const RequestStatusCards = ({
   selectedStatus,
+  disabled = false,
   setSelectedStatus,
   RequestsStatusData,
 }) => {
@@ -10,6 +19,7 @@ const RequestStatusCards = ({
 
   // Handle click
   const handleClick = (title) => {
+    if (disabled) return;
     setSelectedStatus(selectedStatus === title ? "all" : title);
   };
 
@@ -56,14 +66,13 @@ const RequestStatusCards = ({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-black pt-5">
       {statuses.map((status) => {
-        // Check if status is selected
         const isSelected = selectedStatus === status.title;
 
         return (
           <div
             key={status.title}
             onClick={() => handleClick(status.title)}
-            className={`flex items-center p-4 rounded-lg transition-all cursor-pointer shadow hover:shadow-lg
+            className={`flex items-center p-4 rounded-lg transition-all
               ${isSelected ? `${bgClasses[status.color]} border-2 ${borderClasses[status.color]} shadow-xl` : "bg-white border-2 border-transparent"}
             `}
           >
@@ -72,6 +81,7 @@ const RequestStatusCards = ({
 
             {/* Content */}
             <div>
+
               {/* Title */}
               <h3 className="text-lg font-semibold">{status.title}</h3>
 

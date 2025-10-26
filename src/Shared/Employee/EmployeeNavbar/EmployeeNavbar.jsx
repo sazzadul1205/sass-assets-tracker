@@ -2,6 +2,7 @@
 "use client";
 
 // Next Components
+import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
@@ -23,14 +24,18 @@ const EmployeeNavbar = () => {
     <div className="navbar bg-white items-center shadow-xl">
       {/* Navbar Start */}
       <div className="navbar-start">
-        <Image
-          src={Logo}
-          alt="SAT Logo"
-          width={300}
-          height={100}
-          priority
-        />
+        <Link href="/" passHref>
+          <Image
+            src={Logo}
+            alt="SAT Logo"
+            width={300}
+            height={100}
+            priority
+            className="cursor-pointer"
+          />
+        </Link>
       </div>
+
 
       {/* Navbar Center */}
       <div className="navbar-center hidden lg:flex">
