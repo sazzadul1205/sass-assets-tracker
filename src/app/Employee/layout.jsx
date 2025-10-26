@@ -2,7 +2,7 @@
 "use client";
 
 // Next Components
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 
 // Icons
@@ -14,11 +14,49 @@ import { IoReceiptOutline } from "react-icons/io5";
 import { MdOutlineSpaceDashboard } from "react-icons/md";
 
 // Shared
-import EmployeeNavbar from "@/Shared/EmployeeNavbar/EmployeeNavbar";
+import EmployeeNavbar from "@/Shared/Employee/EmployeeNavbar/EmployeeNavbar";
+
+// SweetAlert for confirmation
+import Swal from "sweetalert2";
 
 export default function Layout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
+
+  // ---------- Logout Handler ----------
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You will be logged out from your session.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Logout",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      reverseButtons: true,
+    });
+
+    if (result.isConfirmed) {
+      // Feedback toast
+      Swal.fire({
+        icon: "success",
+        title: "Logged Out",
+        text: "You have been successfully logged out.",
+        position: "top-start",
+        toast: true,
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      // Perform sign out and redirect to login
+      await signOut({
+        redirect: true,
+        callbackUrl: "/Login",
+      });
+    }
+  };
+
 
   // Top Menu Items
   const topMenuItems = [
@@ -54,7 +92,7 @@ export default function Layout({ children }) {
     {
       name: "Logout",
       icon: <IoLogOutOutline />,
-      path: "/logout",
+      action: handleLogout,
     },
   ];
 
@@ -66,10 +104,11 @@ export default function Layout({ children }) {
 
         {/* Main Layout */}
         <main className="flex">
-          {/* Sidebar (Fixed) */}
+          {/* Sidebar */}
           <aside
             className="w-72 fixed top-[65px] left-0 bottom-0 bg-white shadow-md p-4 border-r border-gray-200 
-                     flex flex-col justify-between overflow-y-auto" style={{ height: "calc(100vh - 65px)" }}
+                     flex flex-col justify-between overflow-y-auto"
+            style={{ height: "calc(100vh - 65px)" }}
           >
             {/* Top Menu */}
             <ul className="space-y-2 text-gray-700 font-medium">
@@ -80,7 +119,7 @@ export default function Layout({ children }) {
                     key={item.name}
                     onClick={() => router.push(item.path)}
                     className={`flex items-center gap-3 cursor-pointer rounded-xl py-2.5 px-3 transition-colors
-                    ${isActive
+                      ${isActive
                         ? "bg-blue-100 text-blue-700 font-semibold"
                         : "hover:bg-gray-100 hover:text-blue-600"
                       }`}
@@ -92,7 +131,6 @@ export default function Layout({ children }) {
               })}
             </ul>
 
-
             {/* Bottom Menu */}
             <ul className="space-y-2 text-gray-700 font-medium">
               {bottomMenuItems.map((item) => {
@@ -102,9 +140,13 @@ export default function Layout({ children }) {
                 return (
                   <li
                     key={item.name}
-                    onClick={() => router.push(item.path)}
+                    onClick={() =>
+                      isLogout
+                        ? item.action()
+                        : router.push(item.path)
+                    }
                     className={`flex items-center gap-3 cursor-pointer rounded-xl py-2.5 px-3 transition-colors ${isLogout
-                      ? `text-red-500 hover:text-red-700 hover:bg-red-100`
+                      ? "text-red-500 hover:text-red-700 hover:bg-red-100"
                       : isActive
                         ? "bg-blue-100 text-blue-700 font-semibold"
                         : "hover:bg-gray-100 hover:text-blue-600"
@@ -118,7 +160,7 @@ export default function Layout({ children }) {
             </ul>
           </aside>
 
-          {/* Page Content (Scrollable) */}
+          {/* Page Content */}
           <section className="flex-1 ml-72 overflow-y-auto h-[calc(100vh-80px)]">
             {children}
           </section>
