@@ -1,15 +1,99 @@
+// src/app/Employee/Dashboard/page.jsx
 "use client";
 
+// Next Auth
+import { useSession } from "next-auth/react";
+
 // React
-import React from "react";
+import React, { useState } from "react";
+
+// Packages
+import { useQuery } from "@tanstack/react-query";
+
+
+// Icons
 import { LuUserRoundCheck } from "react-icons/lu";
 
 // Icons
 import { MdOutlineSpaceDashboard } from "react-icons/md";
 
+// Hooks
+import useAxiosPublic from "@/Hooks/useAxiosPublic";
+
+// Shared
+import Error from "@/Shared/Error/Error";
+import Loading from "@/Shared/Loading/Loading";
+
+// Shared Components
+import LogLists from "@/Shared/Employee/EmployeeDashboard/LogLists/LogLists";
+import QuickAccess from "@/Shared/Employee/EmployeeDashboard/QuickAccess/QuickAccess ";
+import RequestStatusCards from "@/Shared/Employee/MyRequests/RequestStatusCards/RequestStatusCards";
+
+
 const Page = () => {
+  const axiosPublic = useAxiosPublic();
+  const { data: session, status } = useSession();
+
+  // Selected Status State
+  const [selectedStatus, setSelectedStatus] = useState("all");
+
+  // Pagination for logs
+  const [logPage, setLogPage] = useState(1);
+  const logLimit = 10;
+
+  // ---------- Requests Status Query ----------
+  const {
+    data: RequestsStatusData,
+    error: RequestsStatusError,
+    isLoading: RequestsStatusIsLoading,
+  } = useQuery({
+    queryKey: ["RequestsStatusData", session?.user?.email],
+    queryFn: () =>
+      axiosPublic
+        .get(`/Requests/Created_by/${session?.user?.email}/Status`)
+        .then((res) => res.data),
+    enabled: !!session?.user?.email,
+  });
+
+  // ---------- Log Status Query with Pagination ----------
+  const {
+    data: LogStatusData,
+    error: LogStatusError,
+    isLoading: LogStatusIsLoading,
+  } = useQuery({
+    queryKey: ["LogStatusData", session?.user?.email, logPage],
+    queryFn: () => {
+      const params = new URLSearchParams({
+        page: logPage.toString(),
+        limit: logLimit.toString(),
+      });
+      return axiosPublic
+        .get(`/Log/${session?.user?.email}?${params}`)
+        .then((res) => res.data);
+    },
+    enabled: !!session?.user?.email,
+    keepPreviousData: true,
+  });
+
+  // Combined Loading
+  if (RequestsStatusIsLoading || LogStatusIsLoading || status === "loading")
+    return <Loading />;
+
+  // Error Handling
+  if (RequestsStatusError || LogStatusError) {
+    const activeError = RequestsStatusError || LogStatusError;
+    const errorMessage =
+      typeof activeError === "string"
+        ? activeError
+        : activeError?.response?.data?.message ||
+        activeError?.message ||
+        "Something went wrong.";
+    console.error("Error fetching requests or logs:", activeError);
+    return <Error message={errorMessage} />;
+  }
+
   return (
-    <div className="p-5" >
+    <div className="p-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
         {/* Left Section */}
@@ -30,7 +114,7 @@ const Page = () => {
           </p>
         </div>
 
-        {/* Right Section — Badge */}
+        {/* Right Section — Badge & Date */}
         <div className="gap-3 mt-3 sm:mt-0 items-center flex text-right">
           {/* Role Badge */}
           <span
@@ -40,10 +124,9 @@ const Page = () => {
             ease-in-out hover:bg-blue-200 hover:text-blue-800 
             hover:scale-105 cursor-default"
           >
-            <LuUserRoundCheck size={16} className="text-blue-600 group-hover:text-blue-800" />
+            <LuUserRoundCheck size={16} className="text-blue-600" />
             Employee
           </span>
-
 
           {/* Date */}
           <span className="text-lg font-semibold text-gray-500 cursor-default">
@@ -57,9 +140,27 @@ const Page = () => {
         </div>
       </div>
 
+      {/* My Requests */}
+      <div className="mt-5">
+        <h3 className="text-2xl font-semibold text-gray-800 mb-2">My Requests</h3>
 
+        <RequestStatusCards
+          disabled={true}
+          selectedStatus={selectedStatus}
+          setSelectedStatus={setSelectedStatus}
+          RequestsStatusData={RequestsStatusData}
+        />
+      </div>
 
+      {/* Quick Access Section */}
+      <QuickAccess />
 
+      {/* Logs Section */}
+      <LogLists
+        logPage={logPage}
+        setLogPage={setLogPage}
+        LogStatusData={LogStatusData}
+      />
     </div>
   );
 };
