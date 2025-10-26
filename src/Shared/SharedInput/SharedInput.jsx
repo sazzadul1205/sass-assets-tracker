@@ -38,6 +38,7 @@ const SharedInput = ({
   className = "",
   placeholder = "",
   readOnly = false,
+  defaultValue = "",
   dateLimit = "past",
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -58,16 +59,16 @@ const SharedInput = ({
         </label>
       )}
 
-      {/* Input */}
+      {/* Textarea */}
       {type === "textarea" ? (
         <textarea
           placeholder={placeholder}
           rows={rows}
           readOnly={readOnly}
+          defaultValue={defaultValue}
           {...(register ? register(name, rules) : {})}
-          className={`${baseClasses} resize-none min-h-[80px] max-h-[300px] overflow-y-auto`}
+          className={`${baseClasses} resize-none bg-white min-h-[80px] max-h-[300px] overflow-y-auto`}
           onInput={(e) => {
-            // Auto-resize for better UX
             e.target.style.height = "auto";
             e.target.style.height = e.target.scrollHeight + "px";
           }}
@@ -76,7 +77,7 @@ const SharedInput = ({
         <select
           {...(register ? register(name, rules) : {})}
           className={baseClasses}
-          defaultValue=""
+          defaultValue={defaultValue || ""}
           disabled={readOnly}
         >
           <option value="" disabled>
@@ -93,16 +94,17 @@ const SharedInput = ({
           control={control}
           name={name}
           rules={rules}
+          defaultValue={defaultValue || null} // <-- default value for date
           render={({ field }) => {
             let dateProps = {};
             if (dateLimit === "past") dateProps.maxDate = new Date();
             else if (dateLimit === "future") dateProps.minDate = new Date();
             return (
               <div className="relative">
-                <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-black" />
+                <FaCalendarAlt className="absolute bg-white left-3 top-1/2 -translate-y-1/2 text-black" />
                 <DatePicker
                   placeholderText={placeholder || "Select date"}
-                  selected={field.value}
+                  selected={field.value || defaultValue}
                   onChange={field.onChange}
                   dateFormat="dd/MMM/yyyy"
                   showMonthDropdown
@@ -123,11 +125,12 @@ const SharedInput = ({
             type={inputType}
             placeholder={placeholder}
             readOnly={readOnly}
+            defaultValue={defaultValue}
             min={type === "number" ? min : undefined}
             max={type === "number" ? max : undefined}
             step={type === "number" ? step || "any" : undefined}
             {...(register ? register(name, rules) : {})}
-            className={baseClasses + (type === "password" ? " pr-11" : "")}
+            className={baseClasses + (type === "password" ? " pr-11 bg-wh" : "")}
           />
           {type === "password" && (
             <button
