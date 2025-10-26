@@ -10,7 +10,7 @@ import Cropper from "react-easy-crop";
 import { FaUpload } from "react-icons/fa";
 
 // Utils
-import { getCroppedImgCircular } from "../Utils/getCroppedImg";
+import { getCroppedImgCircular } from "../../Utils/getCroppedImg";
 
 const SharedImageInputCircular = ({
   onChange,
