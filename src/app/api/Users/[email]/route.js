@@ -3,9 +3,9 @@ import { connectDB } from "@/lib/connectDB";
 import { NextResponse } from "next/server";
 
 // GET request
-export const GET = async (req, { params }) => {
+export const GET = async (req, context) => {
   try {
-    // Destructure params
+    const { params } = context;
     const { email } = params;
 
     // Validate email
@@ -19,7 +19,7 @@ export const GET = async (req, { params }) => {
     // Connect to MongoDB
     const db = await connectDB();
 
-    // Fetch full user document
+    // Fetch user
     const user = await db.collection("Users").findOne({ email });
 
     // Check if user exists
@@ -30,10 +30,10 @@ export const GET = async (req, { params }) => {
       );
     }
 
-    // Remove sensitive fields before sending
+    // Remove password
     const { password, ...safeUser } = user;
 
-    // Return the user safely
+    // Return user
     return NextResponse.json(
       { success: true, user: safeUser },
       { status: 200 }
