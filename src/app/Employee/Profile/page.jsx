@@ -33,6 +33,10 @@ import useAxiosPublic from "@/Hooks/useAxiosPublic";
 import Error from "@/Shared/Error/Error";
 import Loading from "@/Shared/Loading/Loading";
 
+// Modals
+import UpdatedUserDataModal from "@/Shared/Employee/Profile/UpdatedUserDataModal/UpdatedUserDataModal";
+import UpdatedUserPasswordModal from "@/Shared/Employee/Profile/UpdatedUserPasswordModal/UpdatedUserPasswordModal";
+
 const ProfilePage = () => {
   const axiosPublic = useAxiosPublic();
   const { data: session, status } = useSession();
@@ -71,7 +75,6 @@ const ProfilePage = () => {
     return <Error message={errorMessage} />;
   }
 
-
   // Date Formatter
   const formatDate = (dateStr) =>
     dateStr ? new Date(dateStr).toLocaleDateString("en-US") : "Not Provided";
@@ -81,6 +84,7 @@ const ProfilePage = () => {
     <div className="p-6 space-y-6 text-gray-800">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+        {/* Header Content */}
         <div>
           {/* Title */}
           <h1 className="text-3xl sm:text-4xl font-extrabold flex items-center gap-2 text-gray-800">
@@ -98,6 +102,7 @@ const ProfilePage = () => {
         <div className="flex gap-3 mt-4 sm:mt-0">
           {/* Edit Profile Button */}
           <button
+            onClick={() => document.getElementById("Updated_User_Data_Modal").showModal()}
             className="flex items-center gap-3 px-15 py-2.5 bg-blue-600 text-white rounded-lg font-semibold shadow-md hover:shadow-xl 
             hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 transition-all duration-300 ease-in-out transform hover:-translate-y-0.5"
           >
@@ -106,6 +111,7 @@ const ProfilePage = () => {
 
           {/* Change Password Button */}
           <button
+            onClick={() => document.getElementById("Updated_User_Password_Modal").showModal()}
             className="flex items-center gap-3 px-5 py-2.5 bg-white text-gray-800 rounded-lg font-semibold border border-gray-200 
             shadow-md hover:shadow-xl hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-200 hover:text-blue-600transition-all 
             duration-300 ease-in-out transform hover:-translate-y-0.5"
@@ -191,6 +197,28 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Updated User Data Modal */}
+      <dialog id="Updated_User_Data_Modal" className="modal">
+        <UpdatedUserDataModal
+          Refetch={refetch}
+          UserData={data}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* Updated User Password Modal */}
+      <dialog id="Updated_User_Password_Modal" className="modal">
+        <UpdatedUserPasswordModal
+          Refetch={refetch}
+          UserData={data}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
     </div>
   );
 };

@@ -98,8 +98,6 @@ const CreateNewRequestModal = ({ sessionData, Refetch }) => {
     }
   };
 
-
-
   return (
     <div
       id="Create_New_Request_Modal"
