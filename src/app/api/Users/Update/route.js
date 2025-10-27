@@ -8,7 +8,7 @@ export const PUT = async (request) => {
     const data = await request.json();
 
     // Destructure data
-    const { email, name, dob, phone, organization, role, designation } = data;
+    const { email, name, dob, phone, profileImage } = data;
 
     // Basic required fields validation
     if (!email) {
@@ -36,10 +36,8 @@ export const PUT = async (request) => {
       // Update fields
       ...(dob && { dob }),
       ...(name && { name }),
-      ...(role && { role }),
       ...(phone && { phone }),
-      ...(designation && { designation }),
-      ...(organization && { organization }),
+      ...(profileImage && { profileImage }),
 
       // Update timestamps
       updatedAt: new Date(),
@@ -54,7 +52,6 @@ export const PUT = async (request) => {
       { status: 200 }
     );
   } catch (error) {
-    
     // Return error response
     console.error("[Update User API] Error:", error);
     return new Response(
