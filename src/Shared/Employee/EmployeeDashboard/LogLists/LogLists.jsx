@@ -2,6 +2,9 @@
 import { LuFileText, LuCheck, LuInfo } from "react-icons/lu";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
+// Components
+import ReceptData from "./ReceptData/ReceptData";
+
 const LogLists = ({ logPage, setLogPage, LogStatusData }) => {
   if (!LogStatusData) return null;
 
@@ -104,13 +107,12 @@ const LogLists = ({ logPage, setLogPage, LogStatusData }) => {
                     <span className="font-medium text-gray-700">{log.action}</span>
 
                     {/* Details */}
-                    <p className="text-gray-500 text-sm mt-0.5">
+                    <div className="text-gray-500 text-sm mt-0.5">
 
                       {/* Receipt ID */}
                       {log.details?.receipt_id && (
                         <>
-                          Receipt ID:{" "}
-                          <span className="font-semibold">{log.details.receipt_id}</span>
+                          <ReceptData receipt_id={log?.details?.receipt_id} />
                         </>
                       )}
 
@@ -123,7 +125,7 @@ const LogLists = ({ logPage, setLogPage, LogStatusData }) => {
                           <span className="font-semibold">{log.details.new_status}</span>
                         </>
                       )}
-                    </p>
+                    </div>
                   </div>
                 </div>
 
