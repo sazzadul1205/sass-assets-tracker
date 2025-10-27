@@ -38,6 +38,7 @@ const SharedInput = ({
   className = "",
   placeholder = "",
   readOnly = false,
+  disabled = false,
   defaultValue = "",
   dateLimit = "past",
 }) => {
@@ -46,6 +47,7 @@ const SharedInput = ({
 
   const baseClasses = `w-full px-4 py-2.5 border rounded-lg text-gray-800 placeholder-gray-400 focus:ring-4 outline-none transition-all
     ${error ? "border-red-500 focus:border-red-500 focus:ring-red-100" : "border-gray-400 focus:border-blue-500 focus:ring-blue-100"}
+    ${disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70" : "bg-white"}
   `;
 
   // Render logic
@@ -64,10 +66,11 @@ const SharedInput = ({
         <textarea
           placeholder={placeholder}
           rows={rows}
-          readOnly={readOnly}
+          readOnly={readOnly || disabled}
           defaultValue={defaultValue}
+          disabled={disabled}
           {...(register ? register(name, rules) : {})}
-          className={`${baseClasses} resize-none bg-white min-h-[80px] max-h-[300px] overflow-y-auto`}
+          className={`${baseClasses} resize-none min-h-[80px] max-h-[300px] overflow-y-auto`}
           onInput={(e) => {
             e.target.style.height = "auto";
             e.target.style.height = e.target.scrollHeight + "px";
@@ -78,7 +81,7 @@ const SharedInput = ({
           {...(register ? register(name, rules) : {})}
           className={baseClasses}
           defaultValue={defaultValue || ""}
-          disabled={readOnly}
+          disabled={disabled || readOnly}
         >
           <option value="" disabled>
             {placeholder || "Select an option"}
@@ -94,14 +97,21 @@ const SharedInput = ({
           control={control}
           name={name}
           rules={rules}
-          defaultValue={defaultValue || null} // <-- default value for date
+          defaultValue={defaultValue || null}
           render={({ field }) => {
             let dateProps = {};
             if (dateLimit === "past") dateProps.maxDate = new Date();
             else if (dateLimit === "future") dateProps.minDate = new Date();
+
             return (
-              <div className="relative">
-                <FaCalendarAlt className="absolute bg-white left-3 top-1/2 -translate-y-1/2 text-black" />
+              <div className="relative text-black">
+                {/* Calendar Icon */}
+                <FaCalendarAlt
+                  className={`absolute z-50 left-3 top-1/2 -translate-y-1/2 ${disabled || readOnly ? "text-black" : "text-blue-500"}`}
+                  size={18}
+                />
+
+                {/* DatePicker Field */}
                 <DatePicker
                   placeholderText={placeholder || "Select date"}
                   selected={field.value || defaultValue}
@@ -112,6 +122,7 @@ const SharedInput = ({
                   dropdownMode="select"
                   yearDropdownItemNumber={100}
                   scrollableYearDropdown
+                  disabled={disabled || readOnly}
                   className={`pl-10 ${baseClasses}`}
                   {...dateProps}
                 />
@@ -119,18 +130,20 @@ const SharedInput = ({
             );
           }}
         />
+
       ) : (
         <div className="relative">
           <input
             type={inputType}
             placeholder={placeholder}
-            readOnly={readOnly}
+            readOnly={readOnly || disabled}
+            disabled={disabled}
             defaultValue={defaultValue}
             min={type === "number" ? min : undefined}
             max={type === "number" ? max : undefined}
             step={type === "number" ? step || "any" : undefined}
             {...(register ? register(name, rules) : {})}
-            className={baseClasses + (type === "password" ? " pr-11 bg-wh" : "")}
+            className={baseClasses + (type === "password" ? " pr-11" : "")}
           />
           {type === "password" && (
             <button
@@ -138,6 +151,7 @@ const SharedInput = ({
               tabIndex={-1}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={disabled}
             >
               {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
             </button>

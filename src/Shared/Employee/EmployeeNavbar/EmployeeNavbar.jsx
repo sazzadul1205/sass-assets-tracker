@@ -4,13 +4,38 @@
 // Next Components
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
+
+// Packages
+import { useQuery } from "@tanstack/react-query";
 
 // Assets
 import Logo from "../../../../public/Auth_Assets/SAT_Logo.png";
 
+// Hooks
+import useAxiosPublic from "@/Hooks/useAxiosPublic";
+
 const EmployeeNavbar = () => {
   const pathname = usePathname();
+
+  // Hooks
+  const axiosPublic = useAxiosPublic();
+  const { data: session, status } = useSession();
+
+  // ---------- Users Data Query ----------
+  const {
+    data: UserData,
+    isLoading: UserIsLoading,
+    error: UserError,
+  } = useQuery({
+    queryKey: ["UserData", session?.user?.email],
+    queryFn: () =>
+      axiosPublic
+        .get(`/Users/${session?.user?.email}`)
+        .then((res) => res.data.user),
+    enabled: !!session?.user?.email,
+  });
 
   // Derive the active page name from the path
   const getPageTitle = () => {
@@ -36,7 +61,6 @@ const EmployeeNavbar = () => {
         </Link>
       </div>
 
-
       {/* Navbar Center */}
       <div className="navbar-center hidden lg:flex">
         <h3 className="text-black font-bold text-xl">
@@ -48,15 +72,37 @@ const EmployeeNavbar = () => {
 
       {/* Navbar End */}
       <div className="navbar-end text-black gap-3 px-5">
-        <div className="avatar">
-          <div className="w-12 rounded-full">
-            <img
-              src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp"
-              alt="Profile"
-            />
+        {/* Loading State */}
+        {UserIsLoading || status === "loading" ? (
+          <div className="flex items-center gap-3 animate-pulse">
+            <div className="w-12 h-12 rounded-full bg-gray-200"></div>
+            <div className="h-4 w-24 bg-gray-200 rounded"></div>
           </div>
-        </div>
-        <h3 className="font-semibold">John Doe</h3>
+        ) : UserError ? (
+          // Error State
+          <div className="text-red-500 text-sm font-semibold">
+            Failed to load user
+          </div>
+        ) : (
+          // Loaded State
+          <>
+            {/* Avatar */}
+            <div className="avatar">
+              <div className="w-12 rounded-full">
+                <img
+                  src={
+                    UserData?.profileImage ||
+                    "https://img.daisyui.com/images/profile/demo/yellingcat@192.webp"
+                  }
+                  alt={UserData?.name || "Profile"}
+                />
+              </div>
+            </div>
+
+            {/* Name */}
+            <h3 className="font-semibold">{UserData?.name || "John Doe"}</h3>
+          </>
+        )}
       </div>
     </div>
   );
