@@ -67,7 +67,6 @@ const DetailsPage = () => {
     enabled: !!session?.user?.email,
   });
 
-
   // Redirect if user already has complete details
   useEffect(() => {
     if (UserData) {
@@ -77,7 +76,6 @@ const DetailsPage = () => {
       }
     }
   }, [UserData, router]);
-
 
   // Loading state
   if (UserIsLoading, status === "loading") {
@@ -144,7 +142,7 @@ const DetailsPage = () => {
       // Reset form
       reset();
       setProfileImage(null);
-      router.push("/Employee/MyAssets");
+      router.push("/Employee/Dashboard");
     } catch (error) {
 
       // Error
@@ -164,14 +162,13 @@ const DetailsPage = () => {
 
   return (
     <div>
-
       {/* Logo */}
       <Image
         src={Logo}
         alt="SAT Logo"
         width={300}
-        height={100} // original aspect ratio
-        className="mx-auto pb-4" // don't change width/height in CSS
+        height={100}
+        className="mx-auto pb-4"
         priority
       />
 
@@ -180,9 +177,12 @@ const DetailsPage = () => {
 
         {/* Header */}
         <div className="mb-5 text-center">
+          {/* Title  */}
           <h1 className="text-3xl font-extrabold text-gray-800 mt-4 tracking-tight">
             Complete Your Profile
           </h1>
+
+          {/* Description */}
           <p className="text-gray-500 mt-1 text-sm">
             Please fill in the details below to complete your profile.
           </p>
@@ -221,30 +221,6 @@ const DetailsPage = () => {
             }}
             error={errors.phone}
           />
-
-          {/* Organization Name */}
-          <SharedInput
-            label="Organization Name"
-            placeholder="Enter your organization name"
-            register={register}
-            name="organization"
-            rules={{
-              required: "Organization name is required",
-              minLength: { value: 3, message: "Too short!" },
-            }}
-            error={errors.organization}
-          />
-
-          {/* Designation */}
-          <SharedInput
-            label="Designation"
-            placeholder="Your role or title (e.g., Manager, Developer)"
-            register={register}
-            name="designation"
-            rules={{ required: "Designation is required" }}
-            error={errors.designation}
-          />
-
 
           {/* Submit */}
           <button

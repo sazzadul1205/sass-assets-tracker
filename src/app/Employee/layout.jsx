@@ -20,11 +20,12 @@ import EmployeeNavbar from "@/Shared/Employee/EmployeeNavbar/EmployeeNavbar";
 import Swal from "sweetalert2";
 
 export default function Layout({ children }) {
-  const pathname = usePathname();
   const router = useRouter();
+  const pathname = usePathname();
 
   // ---------- Logout Handler ----------
   const handleLogout = async () => {
+    // Ask for confirmation
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "You will be logged out from your session.",
@@ -37,6 +38,7 @@ export default function Layout({ children }) {
       reverseButtons: true,
     });
 
+    // If confirmed
     if (result.isConfirmed) {
       // Feedback toast
       Swal.fire({
@@ -52,11 +54,10 @@ export default function Layout({ children }) {
       // Perform sign out and redirect to login
       await signOut({
         redirect: true,
-        callbackUrl: "/Login",
+        callbackUrl: "/Auth/Login",
       });
     }
   };
-
 
   // Top Menu Items
   const topMenuItems = [
@@ -106,8 +107,7 @@ export default function Layout({ children }) {
         <main className="flex">
           {/* Sidebar */}
           <aside
-            className="w-72 fixed top-[65px] left-0 bottom-0 bg-white shadow-md p-4 border-r border-gray-200 
-                     flex flex-col justify-between overflow-y-auto"
+            className="w-72 fixed top-[65px] left-0 bottom-0 bg-white shadow-md p-4 border-r border-gray-200 flex flex-col justify-between overflow-y-auto"
             style={{ height: "calc(100vh - 65px)" }}
           >
             {/* Top Menu */}
