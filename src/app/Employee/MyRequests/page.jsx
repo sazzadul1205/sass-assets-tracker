@@ -292,8 +292,6 @@ const Page = () => {
         )}
       </div>
 
-
-
       {/* Create New Request Modal */}
       <dialog id="Create_New_Request_Modal" className="modal">
         <CreateNewRequestModal

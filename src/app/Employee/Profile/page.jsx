@@ -1,41 +1,48 @@
 // src/app/Employee/Profile/page.jsx
 "use client";
 
-// React
-import React, { useEffect, useState } from 'react';
-
-// Next components
-import { useSession } from 'next-auth/react';
-
-// Icons
-import { FaUserCircle } from 'react-icons/fa';
+// Next Auth
+import { useSession } from "next-auth/react";
 
 // Packages
-import Swal from 'sweetalert2';
-import { useForm } from 'react-hook-form';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
+
+// Icons
+import { CiLock } from "react-icons/ci";
+import {
+  FaCity,
+  FaPhone,
+  FaGlobe,
+  FaClock,
+  FaSyncAlt,
+  FaIdBadge,
+  FaEnvelope,
+  FaUsersCog,
+  FaBuilding,
+  FaUserCircle,
+  FaCalendarAlt,
+  FaCheckCircle,
+  FaMapMarkerAlt,
+  FaBirthdayCake
+} from "react-icons/fa";
 
 // Hooks
-import useAxiosPublic from '@/Hooks/useAxiosPublic';
+import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
 // Shared
-import Error from '@/Shared/Error/Error';
-import Loading from '@/Shared/Loading/Loading';
-import SharedInput from '@/Shared/SharedInput/SharedInput';
+import Error from "@/Shared/Error/Error";
+import Loading from "@/Shared/Loading/Loading";
 
-const page = () => {
+const ProfilePage = () => {
   const axiosPublic = useAxiosPublic();
   const { data: session, status } = useSession();
 
-  // ---------- State Management ----------
-  const [isUpdating, setIsUpdating] = useState(null);
-
-  // ---------- Users Data Query ----------
+  // ----------- User Data Query -----------
   const {
-    data: UserData,
-    isLoading: UserIsLoading,
-    refetch: UserRefetch,
-    error: UserError,
+    data,
+    isLoading,
+    refetch,
+    error,
   } = useQuery({
     queryKey: ["UserData", session?.user?.email],
     queryFn: () =>
@@ -45,288 +52,166 @@ const page = () => {
     enabled: !!session?.user?.email,
   });
 
-  // ---------- React Hook Form Setup ----------
-  const {
-    register,
-    handleSubmit,
-    control,
-    reset,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      designation: "",
-      organization: "",
-      dob: null,
-      address: "",
-      city: "",
-      country: "",
-    },
-  });
+  // Loading Handler
+  if (
+    isLoading ||
+    status === "loading"
+  ) return <Loading />;
 
-  // ---------- Reset form once UserData is fetched ----------
-  useEffect(() => {
-    if (UserData) {
-      reset({
-        name: UserData.name || "",
-        email: UserData.email || "",
-        phone: UserData.phone || "",
-        designation: UserData.designation || "",
-        organization: UserData.organization || "",
-        dob: UserData.dob ? new Date(UserData.dob) : null,
-        address: UserData.address || "",
-        city: UserData.city || "",
-        country: UserData.country || "",
-      });
-    }
-  }, [UserData, reset]);
-
-  // ---------- Loading State ----------
-  if (UserIsLoading || status === "loading") return <Loading />;
-
-  // ---------- Error Handling ----------
-  if (UserError) {
-    const activeError = UserError;
+  // Error Handler
+  if (error) {
+    const activeError = error;
     const errorMessage =
       typeof activeError === "string"
         ? activeError
         : activeError?.response?.data?.message ||
         activeError?.message ||
         "Something went wrong.";
-    console.error("Error fetching user data:", activeError);
+    console.error("Error fetching requests or status:", activeError);
     return <Error message={errorMessage} />;
   }
 
-  // ---------- Handle Form Submit ----------
-  const onSubmit = async (data) => {
-    try {
-      setIsUpdating(true); // start loading
 
-      // Send PUT request
-      const response = await axiosPublic.put(`/Users/${session?.user?.email}`, {
-        ...data,
-        updated_on: new Date().toISOString(),
-        dob: data.dob ? new Date(data.dob).toISOString() : null,
-      });
-
-      // Handle Success
-      if (response.data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Profile Updated",
-          text: "Your profile information has been successfully updated.",
-          position: "top-start",
-          toast: true,
-          showConfirmButton: false,
-          timer: 2000,
-        });
-
-        // Refresh user data
-        UserRefetch();
-      } else {
-        // Handle API failure
-        Swal.fire({
-          icon: "error",
-          title: "Update Failed",
-          text: response.data.message || "Something went wrong.",
-          position: "center",
-          showConfirmButton: true,
-        });
-      }
-    } catch (error) {
-      // Handle runtime error
-      console.error("Error updating profile:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: error.response?.data?.message || error.message,
-        position: "center",
-        showConfirmButton: true,
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+  // Date Formatter
+  const formatDate = (dateStr) =>
+    dateStr ? new Date(dateStr).toLocaleDateString("en-US") : "Not Provided";
 
 
   return (
-    <div className="p-5">
+    <div className="p-6 space-y-6 text-gray-800">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800 flex items-center gap-2">
-            <FaUserCircle size={30} className="text-green-600" />
+          {/* Title */}
+          <h1 className="text-3xl sm:text-4xl font-extrabold flex items-center gap-2 text-gray-800">
+            <FaUserCircle size={36} className="text-blue-600" />
             My Profile
           </h1>
 
-          {/* Subheader */}
+          {/* Description */}
           <p className="mt-1 text-gray-600 text-sm sm:text-base">
-            View and update your personal information, contact details, and account settings.
+            View your account information and professional details.
           </p>
+        </div>
 
-          {/* Tip */}
-          <p className="mt-2 text-xs sm:text-sm text-gray-400 italic">
-            Tip: Keep your profile information up-to-date for proper account management.
-          </p>
+        {/* Action Buttons */}
+        <div className="flex gap-3 mt-4 sm:mt-0">
+          {/* Edit Profile Button */}
+          <button
+            className="flex items-center gap-3 px-15 py-2.5 bg-blue-600 text-white rounded-lg font-semibold shadow-md hover:shadow-xl 
+            hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 transition-all duration-300 ease-in-out transform hover:-translate-y-0.5"
+          >
+            Edit Profile
+          </button>
+
+          {/* Change Password Button */}
+          <button
+            className="flex items-center gap-3 px-5 py-2.5 bg-white text-gray-800 rounded-lg font-semibold border border-gray-200 
+            shadow-md hover:shadow-xl hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-200 hover:text-blue-600transition-all 
+            duration-300 ease-in-out transform hover:-translate-y-0.5"
+          >
+            <CiLock size={23} className="transition-colors duration-300 group-hover:text-blue-600" />
+            Change Password
+          </button>
+
         </div>
       </div>
 
-      {/* ---------- Profile Form ---------- */}
-      <form
-        className="mt-6 text-black"
-        onSubmit={handleSubmit(onSubmit)}
-      >
+      {/* Main Content */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6" >
+        {/* Basic Info Card */}
+        <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
+          {/* Header */}
+          <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+            <FaIdBadge className="text-blue-600" /> Basic Information
+          </h2>
 
-        {/* Basic Information */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-3' >
-          {/* Full Name Input */}
-          <SharedInput
-            label="Full Name"
-            name="name"
-            type="text"
-            placeholder="Enter full name"
-            register={register}
-            rules={{ required: "Name is required" }}
-            error={errors.name}
-            defaultValue={UserData?.name || ""}
-          />
-
-          {/* Phone Number Input */}
-          <SharedInput
-            label="Phone Number"
-            name="phone"
-            type="text"
-            placeholder="Enter phone number"
-            register={register}
-            rules={{
-              required: "Phone number is required",
-              pattern: {
-                value: /^[0-9+]{7,15}$/,
-                message: "Invalid phone number",
-              },
-            }}
-            error={errors.phone}
-            defaultValue={UserData?.phone || ""}
-          />
-
-          {/* Designation Input */}
-          <SharedInput
-            label="Designation"
-            name="designation"
-            type="text"
-            placeholder="Enter designation"
-            register={register}
-            rules={{ required: "Designation is required" }}
-            error={errors.designation}
-            defaultValue={UserData?.designation || ""}
-          />
-
-          {/* Organization Input */}
-          <SharedInput
-            label="Organization"
-            name="organization"
-            type="text"
-            placeholder="Enter organization"
-            register={register}
-            rules={{ required: "Organization is required" }}
-            error={errors.organization}
-            defaultValue={UserData?.organization || ""}
-          />
-
+          {/* User ID, Full Name, Email, and Date of Birth */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InfoRow icon={<FaUserCircle />} label="User ID" value={data._id || "N/A"} />
+            <InfoRow icon={<FaUserCircle />} label="Full Name" value={data.name || "Not Provided"} />
+            <InfoRow icon={<FaEnvelope />} label="Email" value={data.email || "Not Provided"} />
+            <InfoRow icon={<FaBirthdayCake />} label="Date of Birth" value={formatDate(data.dob)} />
+          </div>
         </div>
 
+        {/* Address Details Card */}
+        <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
+          {/* Header */}
+          <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+            <FaMapMarkerAlt className="text-blue-600" /> Address Details
+          </h2>
 
-        <div className='grid grid-cols-3 gap-3 mt-5' >
-          {/* Address Input */}
-          <SharedInput
-            label="Address"
-            name="address"
-            type="text"
-            placeholder="Enter your address"
-            register={register}
-            rules={{ required: "Address is required" }}
-            error={errors.address}
-            defaultValue={UserData?.address || ""}
-          />
-
-          {/* City Input */}
-          <SharedInput
-            label="City"
-            name="city"
-            type="text"
-            placeholder="Enter city"
-            register={register}
-            rules={{ required: "City is required" }}
-            error={errors.city}
-            defaultValue={UserData?.city || ""}
-          />
-
-          {/* Country Input */}
-          <SharedInput
-            label="Country"
-            name="country"
-            type="text"
-            placeholder="Enter country"
-            register={register}
-            rules={{ required: "Country is required" }}
-            error={errors.country}
-            defaultValue={UserData?.country || ""}
-          />
+          {/* Address, City, Country, and Phone Number */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InfoRow icon={<FaMapMarkerAlt />} label="Address" value={data.address || "Not Provided"} />
+            <InfoRow icon={<FaCity />} label="City" value={data.city || "Not Provided"} />
+            <InfoRow icon={<FaGlobe />} label="Country" value={data.country || "Not Provided"} />
+            <InfoRow icon={<FaPhone />} label="Phone Number" value={data.phone || "Not Provided"} />
+          </div>
         </div>
 
+        {/* Work Information Card */}
+        <div className="col-span-2 bg-white shadow-md rounded-2xl p-6 border border-gray-100">
+          {/* Header */}
+          <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+            <FaBuilding className="text-blue-600" /> Work Information
+          </h2>
 
-        {/* Date of Birth */}
-        <SharedInput
-          label="Date of Birth"
-          type="date"
-          name="dob"
-          control={control}
-          defaultValue={UserData?.dob || ""}
-          rules={{ required: "Date of birth is required" }}
-          error={errors.dob}
-        />
-
-        {/* Submit Button */}
-        <div className="sm:col-span-2 flex justify-end mt-4">
-          <button
-            type="submit"
-            className={`px-6 py-2 font-semibold rounded-lg transition-all text-white ${isUpdating
-              ? "bg-green-400 cursor-not-allowed"
-              : "bg-green-600 hover:bg-green-700"
-              }`}
-            disabled={isUpdating}
-          >
-            {isUpdating ?
-              <span className="flex items-center justify-center gap-2">
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                  ></path>
-                </svg>
-                Updating...
-              </span> : "Update Profile"}
-          </button>
+          {/* Organization, Designation, Department, Position, and Hire Time */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InfoRow icon={<FaBuilding />} label="Organization" value={data.organization || "Not Provided"} />
+            <InfoRow icon={<FaIdBadge />} label="Designation" value={data.designation || "Not Provided"} />
+            <InfoRow icon={<FaUsersCog />} label="Department" value={data.department || "Not Provided"} />
+            <InfoRow icon={<FaClock />} label="Position" value={data.position || "Not Provided"} />
+            <InfoRow icon={<FaCalendarAlt />} label="Hire Time" value={data.hireTime || "Not Provided"} />
+          </div>
         </div>
-      </form>
+
+        {/* Account Metadata Card */}
+        <div className="col-span-2 bg-white shadow-md rounded-2xl p-6 border border-gray-100">
+          {/* Header */}
+          <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+            <FaSyncAlt className="text-blue-600" /> Account Metadata
+          </h2>
+
+          {/* Created At, Updated At, and Status */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <InfoRow icon={<FaCalendarAlt />} label="Created At" value={formatDate(data.createdAt)} />
+            <InfoRow icon={<FaCalendarAlt />} label="Updated At" value={formatDate(data.updatedAt)} />
+            <InfoRow
+              icon={<FaCheckCircle />}
+              label="Status"
+              value={
+                <span className="flex items-center gap-2 text-green-600 font-semibold">
+                  <FaCheckCircle /> Active
+                </span>
+              }
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default page;
+// Reusable Row Component
+const InfoRow = ({ icon, label, value }) => (
+  <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition">
+    {/* Icon */}
+    <div className="text-blue-600 text-lg">{icon}</div>
+
+    {/* Label and Value */}
+    <div>
+      {/* Label */}
+      <p className="text-sm text-gray-500 font-medium">{label}</p>
+
+      {/* Value */}
+      <p className="text-base font-semibold text-gray-800">
+        {value || "Not Provided"}
+      </p>
+    </div>
+  </div>
+);
+
+export default ProfilePage;
