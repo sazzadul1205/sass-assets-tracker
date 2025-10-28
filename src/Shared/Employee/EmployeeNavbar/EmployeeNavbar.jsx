@@ -39,10 +39,10 @@ const EmployeeNavbar = () => {
 
   // Derive the active page name from the path
   const getPageTitle = () => {
-    if (pathname.includes("Dashboard")) return "Employee Dashboard";
-    if (pathname.includes("MyAssets")) return "Employee Assets";
-    if (pathname.includes("MyRequests")) return "Employee Requests";
     if (pathname.includes("Profile")) return "Employee Profile";
+    if (pathname.includes("MyAssets")) return "Employee Assets";
+    if (pathname.includes("Dashboard")) return "Employee Dashboard";
+    if (pathname.includes("MyRequests")) return "Employee Requests";
     if (pathname.includes("AssetRecept")) return "Employee Asset Recept";
     return "Employee Side";
   };

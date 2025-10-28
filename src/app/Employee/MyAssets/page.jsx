@@ -69,6 +69,7 @@ const MyAssetsPage = () => {
 
   // Error state
   if (RequestsError) {
+    console.error(RequestsError);
     const errorMessage =
       typeof RequestsError === "string"
         ? RequestsError
