@@ -2,17 +2,19 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/connectDB";
 
-export const GET = async (_req, { params }) => {
-  const { created_by } = params;
-
-  if (!created_by) {
-    return NextResponse.json(
-      { success: false, message: "Missing 'created_by' parameter" },
-      { status: 400 }
-    );
-  }
-
+export const GET = async (req, context) => {
   try {
+    // Await params
+    const { params } = context;
+    const created_by = params?.created_by;
+
+    if (!created_by) {
+      return NextResponse.json(
+        { success: false, message: "Missing 'created_by' parameter" },
+        { status: 400 }
+      );
+    }
+
     const db = await connectDB();
 
     // Fetch all requests for this user
@@ -21,7 +23,7 @@ export const GET = async (_req, { params }) => {
       .find({ created_by })
       .toArray();
 
-    // Define your official app statuses
+    // Define official app statuses
     const validStatuses = [
       "Pending",
       "Completed",
@@ -31,7 +33,7 @@ export const GET = async (_req, { params }) => {
       "Working On",
     ];
 
-    // Initialize all counts with 0
+    // Initialize all counts
     const statusCounts = validStatuses.reduce(
       (acc, s) => {
         acc[s] = 0;
@@ -40,11 +42,11 @@ export const GET = async (_req, { params }) => {
       { Unmatched: 0 }
     );
 
-    // Loop and normalize statuses
+    // Normalize and count statuses
     for (const req of requests) {
       let status = (req.status || "").trim().toLowerCase();
 
-      // Normalize similar spellings / synonyms
+      // Normalize status
       if (["cancelled", "canceled"].includes(status)) status = "Canceled";
       else if (["working on", "in progress", "ongoing"].includes(status))
         status = "Working On";
@@ -54,9 +56,9 @@ export const GET = async (_req, { params }) => {
         status = "Pending";
       else if (["rejected", "declined"].includes(status)) status = "Rejected";
       else if (["accepted", "approved"].includes(status)) status = "Accepted";
-      else status = null; // mark as unknown
+      else status = null;
 
-      // Count
+      // If the status is valid, increment its count
       if (status && validStatuses.includes(status)) {
         statusCounts[status]++;
       } else {
@@ -64,15 +66,24 @@ export const GET = async (_req, { params }) => {
       }
     }
 
+    // Return the status counts
     return NextResponse.json({
       success: true,
       message: "Status counts fetched successfully",
       statusCounts,
     });
+
+    // Return the status counts
   } catch (error) {
+    // Log the error
     console.error("Error fetching status data:", error);
+    // Return an error response
     return NextResponse.json(
-      { success: false, message: "Failed to fetch status counts" },
+      {
+        success: false,
+        message: "Failed to fetch status counts",
+        error: error.message,
+      },
       { status: 500 }
     );
   }

@@ -1,65 +1,85 @@
 // app/api/Users/Update/route.js
 import { connectDB } from "@/lib/connectDB";
+import { NextResponse } from "next/server";
 
-// PUT request
 export const PUT = async (request) => {
   try {
-    // Get request body
-    const data = await request.json();
+    // Parse incoming JSON body
+    const body = await request.json();
+    const { email, name, dob, phone, profileImage, role } = body;
 
-    // Destructure data
-    const { email, name, dob, phone, profileImage } = data;
-
-    // Basic required fields validation
+    // Validate input
     if (!email) {
-      return new Response(JSON.stringify({ message: "Email is required" }), {
-        status: 400,
-      });
+      return NextResponse.json(
+        { success: false, message: "Email is required" },
+        { status: 400 }
+      );
     }
 
     // Connect to DB
     const db = await connectDB();
-
-    // Get user collection
     const userCollection = db.collection("Users");
 
     // Check if user exists
-    const user = await userCollection.findOne({ email });
-    if (!user) {
-      return new Response(JSON.stringify({ message: "User not found" }), {
-        status: 404,
-      });
+    const existingUser = await userCollection.findOne({ email });
+    if (!existingUser) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 }
+      );
     }
 
-    // Prepare fields to update
+    // Prepare update fields dynamically
     const updatedFields = {
-      // Update fields
-      ...(dob && { dob }),
       ...(name && { name }),
+      ...(dob && { dob }),
       ...(phone && { phone }),
+      ...(role && { role }),
       ...(profileImage && { profileImage }),
-
-      // Update timestamps
       updatedAt: new Date(),
     };
 
-    // Update user in DB
-    await userCollection.updateOne({ email }, { $set: updatedFields });
+    // If no fields to update
+    if (Object.keys(updatedFields).length <= 1) {
+      return NextResponse.json(
+        { success: false, message: "No valid fields provided for update" },
+        { status: 400 }
+      );
+    }
+
+    // Perform update
+    const result = await userCollection.updateOne(
+      { email },
+      { $set: updatedFields }
+    );
 
     // Return success response
-    return new Response(
-      JSON.stringify({ message: "User updated successfully" }),
+    if (result.modifiedCount === 0) {
+      return NextResponse.json(
+        { success: false, message: "No changes were made" },
+        { status: 200 }
+      );
+    }
+
+    // Return success response
+    return NextResponse.json(
+      { success: true, message: "User updated successfully" },
       { status: 200 }
     );
+
+    // Handle errors
   } catch (error) {
+    // Handle errors
+    console.error("[Users/Update] Error:", error);
+
     // Return error response
-    console.error("[Update User API] Error:", error);
-    return new Response(
-      JSON.stringify({
+    return NextResponse.json(
+      {
+        success: false,
         message: "Internal server error",
         error:
           process.env.NODE_ENV === "development" ? error.message : undefined,
-      }),
+      },
       { status: 500 }
     );
   }
