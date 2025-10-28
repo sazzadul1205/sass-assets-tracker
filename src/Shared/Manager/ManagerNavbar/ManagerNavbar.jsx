@@ -1,4 +1,4 @@
-// src/Shared/EmployeeNavbar/EmployeeNavbar.jsx
+// src/Shared/Manager/ManagerNavbar/ManagerNavbar.jsx
 "use client";
 
 // Next Components
@@ -16,7 +16,7 @@ import Logo from "../../../../public/Auth_Assets/SAT_Logo.png";
 // Hooks
 import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
-const EmployeeNavbar = () => {
+const ManagerNavbar = () => {
   const pathname = usePathname();
 
   // Hooks
@@ -39,13 +39,12 @@ const EmployeeNavbar = () => {
 
   // Derive the active page name from the path
   const getPageTitle = () => {
-    if (pathname.includes("Dashboard")) return "Employee Dashboard";
-    if (pathname.includes("MyAssets")) return "Employee Assets";
-    if (pathname.includes("MyRequests")) return "Employee Requests";
-    if (pathname.includes("Profile")) return "Employee Profile";
-    if (pathname.includes("AssetRecept")) return "Employee Asset Recept";
-    return "Employee Side";
+    if (pathname.includes("Dashboard")) return "Manager Dashboard";
+    if (pathname.includes("Users")) return "Manager Users";
+    if (pathname.includes("Profile")) return "Manager Profile";
+    return "Manager Side";
   };
+
 
   return (
     <div className="navbar bg-white items-center shadow-xl">
@@ -110,6 +109,4 @@ const EmployeeNavbar = () => {
   );
 };
 
-export default EmployeeNavbar;
-
-
+export default ManagerNavbar;
