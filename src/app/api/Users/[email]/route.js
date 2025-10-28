@@ -3,10 +3,10 @@ import { connectDB } from "@/lib/connectDB";
 import { NextResponse } from "next/server";
 
 // GET request
-export const GET = async (req, context) => {
+export const GET = async (_req, { params }) => {
   try {
-    const { params } = context;
-    const { email } = params;
+    // Extract email from params - AWAIT the params first
+    const { email } = await params;
 
     // Validate email
     if (!email) {
@@ -33,21 +33,20 @@ export const GET = async (req, context) => {
     // Remove password
     const { password, ...safeUser } = user;
 
-    // Return user
+    // Return success response
     return NextResponse.json(
       { success: true, user: safeUser },
       { status: 200 }
     );
   } catch (error) {
-    // Log the error
-    console.error("Error fetching user by email:", error);
-
     // Return error response
+    console.error("[GET /Users/[email]] Error:", error);
     return NextResponse.json(
       {
         success: false,
         message: "Internal server error.",
-        error: error.message,
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
       },
       { status: 500 }
     );
@@ -55,13 +54,13 @@ export const GET = async (req, context) => {
 };
 
 // PUT request
-export const PUT = async (req, { params }) => {
+export const PUT = async (_req, { params }) => {
   try {
-    // Destructure params
+    // Extract email from params
     const { email } = params;
 
     // Parse request body
-    const body = await req.json();
+    const body = await _req.json();
 
     // Validate email
     if (!email) {
@@ -79,13 +78,13 @@ export const PUT = async (req, { params }) => {
       );
     }
 
+    // Prevent updating password here
+    if (body.password) delete body.password;
+
     // Connect to MongoDB
     const db = await connectDB();
 
-    // Example: prevent direct password update through this route
-    if (body.password) delete body.password;
-
-    // Update the user
+    // Update user
     const result = await db
       .collection("Users")
       .updateOne({ email }, { $set: body });
@@ -105,14 +104,13 @@ export const PUT = async (req, { params }) => {
     );
   } catch (error) {
     // Log the error
-    console.error("Error updating user:", error);
-
-    // Return error response
+    console.error("[PUT /Users/[email]] Error:", error);
     return NextResponse.json(
       {
         success: false,
         message: "Internal server error.",
-        error: error.message,
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
       },
       { status: 500 }
     );

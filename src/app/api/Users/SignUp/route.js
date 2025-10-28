@@ -37,8 +37,10 @@ export const POST = async (request) => {
       createdAt: new Date(),
     };
 
+    // Insert the user
     const result = await userCollection.insertOne(userToInsert);
 
+    // Return successful response
     return new Response(
       JSON.stringify({
         message: "User registered successfully",
@@ -47,7 +49,10 @@ export const POST = async (request) => {
       { status: 201 }
     );
   } catch (error) {
+    // Log the error
     console.error("[SignUp API] Error:", error.message);
+
+    // Return error response
     return new Response(
       JSON.stringify({
         message: "Internal server error. Please try again later.",
