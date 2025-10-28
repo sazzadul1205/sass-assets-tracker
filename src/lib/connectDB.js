@@ -1,17 +1,20 @@
+// lib/connectDB.js
 import { MongoClient, ServerApiVersion } from "mongodb";
 
-let cachedClient = null;
-let cachedDb = null;
+let client = null;
 
-/**
- * Establishes and caches a MongoDB connection.
- * Ensures a single persistent connection across serverless invocations.
- */
 export async function connectDB() {
-  // Check if cached connection exists
-  if (cachedDb) {
-    console.log("Using existing MongoDB connection");
-    return cachedDb;
+  // Check if we have a connected client
+  if (client && client.topology?.isConnected()) {
+    console.log("♻️ Using existing MongoDB connection");
+    return client.db(process.env.MONGODB_DB);
+  }
+
+  // Reset if client exists but is disconnected
+  if (client) {
+    await client.close().catch(console.error);
+    client = null;
+    console.log("🔄 Closed disconnected MongoDB client");
   }
 
   // Get MongoDB environment variables
@@ -33,45 +36,30 @@ export async function connectDB() {
   )}@${MONGODB_CLUSTER}/?retryWrites=true&w=majority&appName=Sass-Assets-Tracker`;
 
   try {
-    // Reuse existing client if connected
-    if (cachedClient && cachedClient.topology?.isConnected()) {
-      console.log("Reusing cached MongoDB client");
-      cachedDb = cachedClient.db(MONGODB_DB);
-      return cachedDb;
-    }
+    console.log("🔗 Establishing new MongoDB connection...");
 
-    // Create new client instance
-    const client = new MongoClient(uri, {
+    client = new MongoClient(uri, {
       serverApi: {
         version: ServerApiVersion.v1,
         strict: true,
         deprecationErrors: true,
       },
-      maxPoolSize: 10,
-      connectTimeoutMS: 10000,
+      maxPoolSize: 15,
+      connectTimeoutMS: 15000,
+      socketTimeoutMS: 45000,
     });
 
-    // Connect to MongoDB Atlas
     await client.connect();
-    console.log("Successfully connected to MongoDB Atlas");
-
-    // Select database
-    const db = client.db(MONGODB_DB);
-    console.log(`Active database: ${db.databaseName}`);
+    console.log("✅ Successfully connected to MongoDB Atlas");
 
     // Verify connection
+    const db = client.db(MONGODB_DB);
     await db.command({ ping: 1 });
-    console.log("MongoDB connection verified and ready.");
+    console.log(`📊 Active database: ${MONGODB_DB}`);
 
-    // Cache client and db for reuse
-    cachedClient = client;
-    cachedDb = db;
-
-    // Return db
     return db;
   } catch (error) {
-    // Log error
-    console.error("MongoDB Connection Error:", error.message);
+    console.error("❌ MongoDB Connection Error:", error.message);
 
     // Helpful troubleshooting hints
     if (error.message.includes("ENOTFOUND")) {
@@ -82,7 +70,8 @@ export async function connectDB() {
       console.error("Authentication error: Check username/password in .env.");
     }
 
-    // Throw error
+    // Reset on error
+    client = null;
     throw new Error(
       "MongoDB connection failed. Please review your configuration."
     );
