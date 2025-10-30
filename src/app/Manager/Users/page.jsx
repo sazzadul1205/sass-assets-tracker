@@ -1,5 +1,10 @@
 // src/app/Manager/Users/page.jsx
 "use client";
+// React components
+import { useState } from 'react';
+
+// Next Auth
+import { useSession } from 'next-auth/react';
 
 // Icons
 import { FaUsers } from 'react-icons/fa';
@@ -14,10 +19,14 @@ import useAxiosPublic from '@/Hooks/useAxiosPublic';
 // Shared
 import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
+
+// Modals
 import ViewEmployeeDataModal from '@/Shared/Manager/ViewEmployeeDataModal/ViewEmployeeDataModal';
+import UpdateEmployeeDataModal from '@/Shared/Manager/UpdateEmployeeDataModal/UpdateEmployeeDataModal';
 
 const page = () => {
   const axiosPublic = useAxiosPublic();
+  const { data: session, status } = useSession();
 
   // States
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -26,6 +35,7 @@ const page = () => {
   const {
     data: UsersData,
     error: UsersError,
+    refetch: UsersRefetch,
     isLoading: UsersIsLoading
   } = useQuery({
     queryKey: ["AllUsersData"],
@@ -35,7 +45,7 @@ const page = () => {
   });
 
   // Loading state
-  if (UsersIsLoading) return <Loading />;
+  if (UsersIsLoading || status === "loading") return <Loading />;
 
   // Error state
   if (UsersError) {
@@ -46,9 +56,6 @@ const page = () => {
         : UsersError?.response?.data?.message || UsersError?.message || "Something went wrong.";
     return <Error message={errorMessage} />;
   }
-
-  console.log(UsersData);
-
 
   return (
     <div className="p-5">
@@ -78,10 +85,10 @@ const page = () => {
                 { label: "#", align: "center" },
                 { label: "Name", align: "left" },
                 { label: "Email", align: "left" },
-                { label: "Role", align: "left" },
+                { label: "Department", align: "left" },
+                { label: "Position", align: "left" },
                 { label: "Phone", align: "left" },
-                { label: "Created At", align: "center" },
-                { label: "Updated At", align: "center" },
+                { label: "Hired At", align: "center" },
                 { label: "Actions", align: "center" }
               ].map((col, idx) => (
                 <th
@@ -107,10 +114,10 @@ const page = () => {
                   { value: index + 1, align: "center" },
                   { value: user.name, align: "left" },
                   { value: user.email, align: "left" },
-                  { value: user.role || "Undefined", align: "left" },
+                  { value: user.department_name || "Not Set Yet", align: "left" },
+                  { value: user.position_name || "Not Set Yet", align: "left" },
                   { value: user.phone || "Not Given", align: "left" },
-                  { value: user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A", align: "center" },
-                  { value: user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : "N/A", align: "center" },
+                  { value: user.hire_time ? new Date(user.hire_time).toLocaleDateString() : "Not Set Yet", align: "center" },
                   {
                     value: (
                       <div className="flex justify-center gap-3">
@@ -133,7 +140,10 @@ const page = () => {
                         {/* Edit Button */}
                         <button
                           className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 w-40 shadow-md hover:shadow-lg group relative"
-                          onClick={() => console.log("Edit", user._id)}
+                          onClick={() => {
+                            setSelectedEmployee(user);
+                            document.getElementById("Update_Employee_Data_Modal").showModal();
+                          }}
                         >
                           <FaEdit className="text-base" />
                           Edit Information
@@ -176,13 +186,25 @@ const page = () => {
               </tr>
             )}
           </tbody>
-
         </table>
       </div>
 
-      {/* Create New Request Modal */}
+      {/* View Employee Data Modal */}
       <dialog id="View_Employee_Data_Modal" className="modal">
         <ViewEmployeeDataModal
+          selectedEmployee={selectedEmployee}
+          setSelectedEmployee={setSelectedEmployee}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* Update Employee Data Modal */}
+      <dialog id="Update_Employee_Data_Modal" className="modal">
+        <UpdateEmployeeDataModal
+          refetch={UsersRefetch}
+          user={session?.user?.email}
           selectedEmployee={selectedEmployee}
           setSelectedEmployee={setSelectedEmployee}
         />
