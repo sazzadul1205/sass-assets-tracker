@@ -15,7 +15,7 @@ import useAxiosPublic from '@/Hooks/useAxiosPublic';
 import SharedInput from '@/Shared/SharedInput/SharedInput';
 import DynamicItemsInput from '@/Shared/DynamicItemsInput/DynamicItemsInput';
 
-const CreatedDepartmentModal = () => {
+const CreatedDepartmentModal = ({ UserEmail }) => {
   const axiosPublic = useAxiosPublic();
 
   // States
@@ -61,6 +61,7 @@ const CreatedDepartmentModal = () => {
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        createdBy: UserEmail,
       };
 
       // Post to your backend API
