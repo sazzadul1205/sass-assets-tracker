@@ -83,15 +83,19 @@ const SharedInput = ({
           defaultValue={defaultValue || ""}
           disabled={disabled || readOnly}
         >
+          {/* Placeholder option */}
           <option value="" disabled>
             {placeholder || "Select an option"}
           </option>
+
+          {/* Options */}
           {options.map((opt) => (
-            <option key={opt.value || opt} value={opt.value || opt}>
-              {opt.label || opt}
+            <option key={opt.value || opt} value={opt.value ?? opt}>
+              {opt.label ?? opt}
             </option>
           ))}
         </select>
+
       ) : type === "date" && control ? (
         <Controller
           control={control}
