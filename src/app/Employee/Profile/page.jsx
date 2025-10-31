@@ -166,11 +166,11 @@ const ProfilePage = () => {
 
           {/* Organization, Designation, Department, Position, and Hire Time */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InfoRow icon={<FaBuilding />} label="Organization" value={data.organization || "Not Provided"} />
-            <InfoRow icon={<FaIdBadge />} label="Designation" value={data.designation || "Not Provided"} />
-            <InfoRow icon={<FaUsersCog />} label="Department" value={data.department || "Not Provided"} />
-            <InfoRow icon={<FaClock />} label="Position" value={data.position || "Not Provided"} />
-            <InfoRow icon={<FaCalendarAlt />} label="Hire Time" value={data.hireTime || "Not Provided"} />
+            <InfoRow icon={<FaBuilding />} label="Organization" value={data?.organization_name || "Not Provided"} />
+            <InfoRow icon={<FaIdBadge />} label="Designation" value={data?.designation_name || "Not Provided"} />
+            <InfoRow icon={<FaUsersCog />} label="Department" value={data?.department_name || "Not Provided"} />
+            <InfoRow icon={<FaClock />} label="Position" value={data?.position_name || "Not Provided"} />
+            <InfoRow icon={<FaCalendarAlt />} label="Hire Time" value={data?.hire_time || "Not Provided"} />
           </div>
         </div>
 

@@ -1,10 +1,8 @@
 // src/app/Manager/Users/page.jsx
 "use client";
+
 // React components
 import { useState } from 'react';
-
-// Next Auth
-import { useSession } from 'next-auth/react';
 
 // Icons
 import { FaUsers } from 'react-icons/fa';
@@ -26,7 +24,6 @@ import UpdateEmployeeDataModal from '@/Shared/Manager/UpdateEmployeeDataModal/Up
 
 const page = () => {
   const axiosPublic = useAxiosPublic();
-  const { data: session, status } = useSession();
 
   // States
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -45,7 +42,7 @@ const page = () => {
   });
 
   // Loading state
-  if (UsersIsLoading || status === "loading") return <Loading />;
+  if (UsersIsLoading) return <Loading />;
 
   // Error state
   if (UsersError) {
@@ -204,7 +201,6 @@ const page = () => {
       <dialog id="Update_Employee_Data_Modal" className="modal">
         <UpdateEmployeeDataModal
           refetch={UsersRefetch}
-          user={session?.user?.email}
           selectedEmployee={selectedEmployee}
           setSelectedEmployee={setSelectedEmployee}
         />
