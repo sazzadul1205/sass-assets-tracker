@@ -46,8 +46,6 @@ const ViewEmployeeDataModal = ({ selectedEmployee, setSelectedEmployee }) => {
           </h2>
         </div>
 
-
-
         {/*  Inside your modal, after the header */}
         <div className="flex">
           {/* Copy Button */}
