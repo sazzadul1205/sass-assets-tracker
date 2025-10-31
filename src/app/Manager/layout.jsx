@@ -16,6 +16,7 @@ import ManagerNavbar from "@/Shared/Manager/ManagerNavbar/ManagerNavbar";
 
 // SweetAlert for confirmation
 import Swal from "sweetalert2";
+import Department from "../../../public/svgs/Department";
 
 
 const layout = ({ children }) => {
@@ -69,7 +70,11 @@ const layout = ({ children }) => {
       name: "Users",
       icon: <FiUsers />,
       path: "/Manager/Users",
-
+    },
+    {
+      name: "Departments",
+      icon: <Department className="w-5 h-5" />,
+      path: "/Manager/Departments",
     },
   ];
 

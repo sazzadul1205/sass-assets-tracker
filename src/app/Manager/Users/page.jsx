@@ -2,10 +2,13 @@
 "use client";
 
 // React components
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+// Next Components
+import Image from 'next/image';
 
 // Icons
-import { FaUsers } from 'react-icons/fa';
+import { FaSearch, FaUsers } from 'react-icons/fa';
 import { FaEye, FaEdit } from 'react-icons/fa';
 
 // Packages
@@ -28,6 +31,25 @@ const page = () => {
   // States
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
+  // Search Term State
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedPosition, setSelectedPosition] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+
+
+  // Example options (you can fetch from server if needed)
+  const departmentOptions = ["HR", "Finance", "Engineering", "Marketing"];
+  const positionOptions = ["Manager", "Engineer", "Analyst", "Intern"];
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim().toLowerCase());
+    }, 300); // 300ms delay is usually enough
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+
   // Fetch Users
   const {
     data: UsersData,
@@ -40,6 +62,24 @@ const page = () => {
       axiosPublic.get(`/Users/AllUsers`).then(res => res.data.data),
     keepPreviousData: true,
   });
+
+  // Filter users based on search and filters
+  const filteredUsers = UsersData?.filter((user) => {
+    const matchesSearch =
+      debouncedSearch === "" ||
+      user.name.toLowerCase().includes(debouncedSearch) ||
+      user.email.toLowerCase().includes(debouncedSearch) ||
+      user.department_name?.toLowerCase().includes(debouncedSearch);
+
+    const matchesDepartment =
+      selectedDepartment === "" || user.department_name === selectedDepartment;
+
+    const matchesPosition =
+      selectedPosition === "" || user.position_name === selectedPosition;
+
+    return matchesSearch && matchesDepartment && matchesPosition;
+  });
+
 
   // Loading state
   if (UsersIsLoading) return <Loading />;
@@ -72,6 +112,50 @@ const page = () => {
         </div>
       </div>
 
+      {/* Search and Filters  */}
+      <div className="bg-white border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5">
+        {/* Search Input */}
+        <div className="flex items-center gap-3 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+          <FaSearch className="text-gray-500 text-lg" />
+          <input
+            type="text"
+            placeholder="Search employees by name, email, or department..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
+          />
+        </div>
+
+        {/* Department Dropdown */}
+        <select
+          value={selectedDepartment}
+          onChange={(e) => setSelectedDepartment(e.target.value)}
+          className="min-w-64 border border-gray-200 rounded-xl px-4 py-2 text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+        >
+          <option value="">All Departments</option>
+          {departmentOptions.map((dept) => (
+            <option key={dept} value={dept}>
+              {dept}
+            </option>
+          ))}
+        </select>
+
+        {/* Position Dropdown */}
+        <select
+          value={selectedPosition}
+          onChange={(e) => setSelectedPosition(e.target.value)}
+          className="min-w-64 border border-gray-200 rounded-xl px-4 py-2 text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+        >
+          <option value="">All Positions</option>
+          {positionOptions.map((pos) => (
+            <option key={pos} value={pos}>
+              {pos}
+            </option>
+          ))}
+        </select>
+      </div>
+
+
       {/* Users Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200 rounded-lg">
@@ -80,8 +164,8 @@ const page = () => {
             <tr>
               {[
                 { label: "#", align: "center" },
-                { label: "Name", align: "left" },
-                { label: "Email", align: "left" },
+                { label: "User", align: "left" },
+                { label: "User Address", align: "left" },
                 { label: "Department", align: "left" },
                 { label: "Position", align: "left" },
                 { label: "Phone", align: "left" },
@@ -105,16 +189,50 @@ const page = () => {
 
           {/* Table Body */}
           <tbody>
-            {UsersData && UsersData.length > 0 ? (
-              UsersData.map((user, index) => {
+            {filteredUsers && filteredUsers.length > 0 ? (
+              filteredUsers.map((user, index) => {
                 const columns = [
                   { value: index + 1, align: "center" },
-                  { value: user.name, align: "left" },
-                  { value: user.email, align: "left" },
+                  {
+                    value: (
+                      <div className="flex items-center gap-3">
+                        {/* Avatar */}
+                        <div className="avatar">
+                          <div className="w-12 rounded-full">
+                            <Image
+                              src={user?.profileImage ? user?.profileImage : "/Placeholders/User.png"}
+                              alt="User"
+                              width={100}
+                              height={100}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Name and Email */}
+                        <div>
+                          {/* Name */}
+                          <p className="text-sm font-semibold text-gray-800" >{user.name}</p>
+
+                          {/* Email */}
+                          <p className="text-xs text-gray-500" >{user.email}</p>
+                        </div>
+                      </div>
+                    ), align: "left"
+                  },
+                  { value: user.address || "Not Set Yet", align: "left" },
                   { value: user.department_name || "Not Set Yet", align: "left" },
                   { value: user.position_name || "Not Set Yet", align: "left" },
                   { value: user.phone || "Not Given", align: "left" },
-                  { value: user.hire_time ? new Date(user.hire_time).toLocaleDateString() : "Not Set Yet", align: "center" },
+                  {
+                    value: user.hire_time
+                      ? new Date(user.hire_time).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      })
+                      : "Not Set Yet",
+                    align: "center",
+                  },
                   {
                     value: (
                       <div className="flex justify-center gap-3">
@@ -159,7 +277,7 @@ const page = () => {
                     {columns.map((col, idx) => (
                       <td
                         key={idx}
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${col.align === "left"
+                        className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-default ${col.align === "left"
                           ? "text-left"
                           : col.align === "center"
                             ? "text-center"
