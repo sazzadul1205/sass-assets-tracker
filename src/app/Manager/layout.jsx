@@ -67,9 +67,9 @@ const layout = ({ children }) => {
       path: "/Manager/Dashboard",
     },
     {
-      name: "Users",
+      name: "Employees",
       icon: <FiUsers />,
-      path: "/Manager/Users",
+      path: "/Manager/Employees",
     },
     {
       name: "Departments",

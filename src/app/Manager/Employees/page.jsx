@@ -1,4 +1,4 @@
-// src/app/Manager/Users/page.jsx
+// src/app/Manager/Employees/page.jsx
 "use client";
 
 // React components
@@ -22,8 +22,8 @@ import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
 
 // Modals
-import ViewEmployeeDataModal from '@/Shared/Manager/ViewEmployeeDataModal/ViewEmployeeDataModal';
-import UpdateEmployeeDataModal from '@/Shared/Manager/UpdateEmployeeDataModal/UpdateEmployeeDataModal';
+import ViewEmployeeDataModal from '@/Shared/Manager/Employees/ViewEmployeeDataModal/ViewEmployeeDataModal';
+import UpdateEmployeeDataModal from '@/Shared/Manager/Employees/UpdateEmployeeDataModal/UpdateEmployeeDataModal';
 
 const page = () => {
   const axiosPublic = useAxiosPublic();
@@ -48,7 +48,6 @@ const page = () => {
     }, 300); // 300ms delay is usually enough
     return () => clearTimeout(handler);
   }, [searchTerm]);
-
 
   // Fetch Users
   const {
@@ -80,13 +79,12 @@ const page = () => {
     return matchesSearch && matchesDepartment && matchesPosition;
   });
 
-
   // Loading state
   if (UsersIsLoading) return <Loading />;
 
   // Error state
   if (UsersError) {
-    console.error(RequestsError);
+    console.error(UsersError);
     const errorMessage =
       typeof UsersError === "string"
         ? UsersError

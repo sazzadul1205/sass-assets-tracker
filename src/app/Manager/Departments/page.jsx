@@ -1,33 +1,64 @@
-
 // src/app/Manager/Departments/page.jsx
 "use client";
 
-// React components
-import React from 'react';
+// React Components
+import React from "react";
 
-// Next Auth
-import { useSession } from 'next-auth/react';
+// Next Components
+import { useSession } from "next-auth/react";
 
 // Icons
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaEye, FaEdit } from "react-icons/fa";
 
-// assets
-import Department from '../../../../public/svgs/Department';
+// Packages
+import { useQuery } from "@tanstack/react-query";
 
-// Shared
-import Loading from '@/Shared/Loading/Loading';
+// Assets
+import Department from "../../../../public/svgs/Department";
+
+// Shared 
+import Error from "@/Shared/Error/Error";
+import Loading from "@/Shared/Loading/Loading";
+
+// Hooks
+import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
 // Shared Modal
-import CreatedDepartmentModal from '@/Shared/Manager/CreatedDepartmentModal/CreatedDepartmentModal';
+import CreatedDepartmentModal from "@/Shared/Manager/Departments/CreatedDepartmentModal/CreatedDepartmentModal";
+import EditDepartmentModal from "@/Shared/Manager/Departments/EditDepartmentModal/EditDepartmentModal";
 
-const page = () => {
-  const { data: session, status } = useSession()
+const Page = () => {
+  const axiosPublic = useAxiosPublic();
+  const { data: session, status } = useSession();
 
+  // Fetch Departments
+  const {
+    data: DepartmentsData,
+    error: DepartmentsError,
+    refetch: DepartmentsRefetch,
+    isLoading: DepartmentsIsLoading,
+  } = useQuery({
+    queryKey: ["DepartmentsData"],
+    queryFn: () =>
+      axiosPublic.get(`/Departments`).then((res) => res.data.data),
+    keepPreviousData: true,
+  });
 
-  // Loading Handler
-  if (
-    status === "loading"
-  ) return <Loading />;
+  // Handle Loading
+  if (DepartmentsIsLoading || status === "loading") return <Loading />;
+
+  // Handle errors
+  if (DepartmentsError) {
+    console.error(DepartmentsError);
+    const errorMessage =
+      typeof DepartmentsError === "string"
+        ? DepartmentsError
+        : DepartmentsError?.response?.data?.message || DepartmentsError?.message || "Something went wrong.";
+    return <Error message={errorMessage} />;
+  }
+
+  console.log(DepartmentsData);
+
 
   return (
     <div className="p-5">
@@ -39,30 +70,160 @@ const page = () => {
             All Departments
           </h1>
           <p className="mt-1 text-gray-500 text-sm sm:text-base">
-            View and manage all registered departments in the system
+            Manage all company departments, roles, and budgets
           </p>
-
         </div>
 
         {/* Add Button */}
         <button
-          onClick={() => document.getElementById("Created_Department_Modal").showModal()}
+          onClick={() =>
+            document.getElementById("Created_Department_Modal").showModal()
+          }
           className="flex items-center gap-3 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold border border-blue-700
-            shadow-md hover:shadow-xl hover:bg-blue-700 hover:text-white transition-all
+            shadow-md hover:shadow-xl hover:bg-blue-700 transition-all
             duration-300 ease-in-out transform hover:-translate-y-0.5"
         >
-          <FaPlus size={23} className="transition-colors duration-300" />
+          <FaPlus size={22} />
           Create a New Department
         </button>
-
       </div>
 
+      {/* Table */}
+      <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+        <table className="min-w-full bg-white">
+          {/* Table Head */}
+          <thead className="bg-gray-100 text-gray-700 text-sm font-semibold uppercase">
+            <tr>
+              <th className="px-6 py-3 text-center">Code</th>
+              <th className="px-6 py-3 text-left">Department Name</th>
+              <th className="px-6 py-3 text-center">Budget (Annual)</th>
+              <th className="px-6 py-3 text-center">Created At</th>
+              <th className="px-6 py-3 text-center">Actions</th>
+            </tr>
+          </thead>
 
+          {/* Table Body */}
+          <tbody>
+            {DepartmentsData && DepartmentsData.length > 0 ? (
+              DepartmentsData.map((dept, index) => {
+                const columns = [
+                  { value: dept.department_Code || "—", align: "center" },
+                  {
+                    value: (
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">
+                          {dept.department_Name}
+                        </p>
+                        <p className="text-xs text-gray-500 italic">
+                          {dept.description || "No description provided"}
+                        </p>
+                      </div>
+                    ),
+                    align: "left",
+                  },
+                  {
+                    value: dept.budget?.annual
+                      ? `$${dept.budget.annual.toLocaleString()}`
+                      : "—",
+                    align: "center",
+                  },
+                  {
+                    value: new Date(dept.createdAt).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    }),
+                    align: "center",
+                  },
+                  {
+                    value: (
+                      <div className="flex justify-center gap-3">
+                        {/* View Button */}
+                        <button
+                          className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 w-36 shadow-md hover:shadow-lg group relative"
+                          onClick={() => {
+                            setSelectedDepartment(dept);
+                            document.getElementById("View_Department_Modal").showModal();
+                          }}
+                        >
+                          <FaEye className="text-base" />
+                          View
+                          <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            View Department Details
+                          </span>
+                        </button>
 
-      {/* Created Department Modal */}
+                        {/* Edit Button */}
+                        <button
+                          className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 w-36 shadow-md hover:shadow-lg group relative"
+                          onClick={() => {
+                            setSelectedDepartment(dept);
+                            document.getElementById("Update_Department_Modal").showModal();
+                          }}
+                        >
+                          <FaEdit className="text-base" />
+                          Edit
+                          <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Edit Department
+                          </span>
+                        </button>
+                      </div>
+                    ),
+                    align: "center",
+                  },
+                ];
+
+                return (
+                  <tr
+                    key={dept._id || index}
+                    className="border-t border-gray-200 hover:bg-gray-50 transition"
+                  >
+                    {columns.map((col, i) => (
+                      <td
+                        key={i}
+                        className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-default ${col.align === "left"
+                          ? "text-left"
+                          : col.align === "center"
+                            ? "text-center"
+                            : "text-right"
+                          }`}
+                      >
+                        {col.value}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="px-6 py-4 text-center text-sm text-gray-500 italic"
+                >
+                  No departments found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+
+        </table>
+      </div>
+
+      {/* Create Department Modal */}
       <dialog id="Created_Department_Modal" className="modal">
         <CreatedDepartmentModal
-          // Refetch={refetch}
+          Refetch={DepartmentsRefetch}
+          UserEmail={session?.user?.email}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* Edit Department Modal */}
+      <dialog id="Edit_Department_Modal" className="modal">
+        <EditDepartmentModal
+          Refetch={DepartmentsRefetch}
           UserEmail={session?.user?.email}
         />
         <form method="dialog" className="modal-backdrop">
@@ -73,4 +234,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;
