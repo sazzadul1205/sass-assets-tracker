@@ -2,7 +2,7 @@
 "use client";
 
 // React Components
-import React from "react";
+import React, { useState } from "react";
 
 // Next Components
 import { useSession } from "next-auth/react";
@@ -26,10 +26,14 @@ import useAxiosPublic from "@/Hooks/useAxiosPublic";
 // Shared Modal
 import CreatedDepartmentModal from "@/Shared/Manager/Departments/CreatedDepartmentModal/CreatedDepartmentModal";
 import EditDepartmentModal from "@/Shared/Manager/Departments/EditDepartmentModal/EditDepartmentModal";
+import ViewDepartmentModal from "@/Shared/Manager/Departments/ViewDepartmentModal/ViewDepartmentModal";
 
 const Page = () => {
   const axiosPublic = useAxiosPublic();
   const { data: session, status } = useSession();
+
+  // Stated
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
 
   // Fetch Departments
   const {
@@ -56,9 +60,6 @@ const Page = () => {
         : DepartmentsError?.response?.data?.message || DepartmentsError?.message || "Something went wrong.";
     return <Error message={errorMessage} />;
   }
-
-  console.log(DepartmentsData);
-
 
   return (
     <div className="p-5">
@@ -89,16 +90,30 @@ const Page = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
-        <table className="min-w-full bg-white">
-          {/* Table Head */}
-          <thead className="bg-gray-100 text-gray-700 text-sm font-semibold uppercase">
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+          {/* Table Header */}
+          <thead className="bg-gray-100">
             <tr>
-              <th className="px-6 py-3 text-center">Code</th>
-              <th className="px-6 py-3 text-left">Department Name</th>
-              <th className="px-6 py-3 text-center">Budget (Annual)</th>
-              <th className="px-6 py-3 text-center">Created At</th>
-              <th className="px-6 py-3 text-center">Actions</th>
+              {[
+                { label: "Code", align: "center" },
+                { label: "Department Name", align: "left" },
+                { label: "Budget (Annual)", align: "center" },
+                { label: "Created At", align: "center" },
+                { label: "Actions", align: "center" },
+              ].map((col, idx) => (
+                <th
+                  key={idx}
+                  className={`px-6 py-3 text-xs font-medium text-gray-500 uppercase ${col.align === "left"
+                    ? "text-left"
+                    : col.align === "center"
+                      ? "text-center"
+                      : "text-right"
+                    }`}
+                >
+                  {col.label}
+                </th>
+              ))}
             </tr>
           </thead>
 
@@ -158,7 +173,7 @@ const Page = () => {
                           className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 w-36 shadow-md hover:shadow-lg group relative"
                           onClick={() => {
                             setSelectedDepartment(dept);
-                            document.getElementById("Update_Department_Modal").showModal();
+                            document.getElementById("Edit_Department_Modal").showModal();
                           }}
                         >
                           <FaEdit className="text-base" />
@@ -224,7 +239,19 @@ const Page = () => {
       <dialog id="Edit_Department_Modal" className="modal">
         <EditDepartmentModal
           Refetch={DepartmentsRefetch}
-          UserEmail={session?.user?.email}
+          selectedDepartment={selectedDepartment}
+          setSelectedDepartment={setSelectedDepartment}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* View Department Modal */}
+      <dialog id="View_Department_Modal" className="modal">
+        <ViewDepartmentModal
+          selectedDepartment={selectedDepartment}
+          setSelectedDepartment={setSelectedDepartment}
         />
         <form method="dialog" className="modal-backdrop">
           <button>close</button>

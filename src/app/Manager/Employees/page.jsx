@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 // Icons
-import { FaSearch, FaUsers } from 'react-icons/fa';
+import { FaSearch, FaUserAltSlash, FaUsers } from 'react-icons/fa';
 import { FaEye, FaEdit } from 'react-icons/fa';
 
 // Packages
@@ -37,11 +37,6 @@ const page = () => {
   const [selectedPosition, setSelectedPosition] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
 
-
-  // Example options (you can fetch from server if needed)
-  const departmentOptions = ["HR", "Finance", "Engineering", "Marketing"];
-  const positionOptions = ["Manager", "Engineer", "Analyst", "Intern"];
-
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchTerm.trim().toLowerCase());
@@ -62,6 +57,19 @@ const page = () => {
     keepPreviousData: true,
   });
 
+  // Fetch Departments
+  const {
+    data: DepartmentsData,
+    error: DepartmentsError,
+    refetch: DepartmentsRefetch,
+    isLoading: DepartmentsIsLoading
+  } = useQuery({
+    queryKey: ["AllDepartmentsData"],
+    queryFn: () =>
+      axiosPublic.get(`/Departments/Roles`).then(res => res.data.data),
+    keepPreviousData: true,
+  });
+
   // Filter users based on search and filters
   const filteredUsers = UsersData?.filter((user) => {
     const matchesSearch =
@@ -79,11 +87,22 @@ const page = () => {
     return matchesSearch && matchesDepartment && matchesPosition;
   });
 
+  // After fetching DepartmentsData
+  // Extract unique departments and roles
+  const departmentOptions = DepartmentsData?.map(dep => dep.department_Name) || [];
+
+  // Flatten all roles across departments and extract unique roles
+  const roleOptions = Array.from(
+    new Set(
+      DepartmentsData?.flatMap(dep => dep.roles.map(role => role.role)) || []
+    )
+  );
+
   // Loading state
-  if (UsersIsLoading) return <Loading />;
+  if (UsersIsLoading || DepartmentsIsLoading) return <Loading />;
 
   // Error state
-  if (UsersError) {
+  if (UsersError || DepartmentsError) {
     console.error(UsersError);
     const errorMessage =
       typeof UsersError === "string"
@@ -91,6 +110,12 @@ const page = () => {
         : UsersError?.response?.data?.message || UsersError?.message || "Something went wrong.";
     return <Error message={errorMessage} />;
   }
+
+  // Handle Refresh
+  const handleRefresh = () => {
+    UsersRefetch();
+    DepartmentsRefetch();
+  };
 
   return (
     <div className="p-5">
@@ -132,27 +157,26 @@ const page = () => {
         >
           <option value="">All Departments</option>
           {departmentOptions.map((dept) => (
-            <option key={dept} value={dept}>
+            <option key={dept} value={dept} >
               {dept}
             </option>
           ))}
         </select>
 
-        {/* Position Dropdown */}
+        {/* Role Dropdown */}
         <select
           value={selectedPosition}
           onChange={(e) => setSelectedPosition(e.target.value)}
           className="min-w-64 border border-gray-200 rounded-xl px-4 py-2 text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
         >
           <option value="">All Positions</option>
-          {positionOptions.map((pos) => (
-            <option key={pos} value={pos}>
-              {pos}
+          {roleOptions.map((role) => (
+            <option key={role} value={role} >
+              {role}
             </option>
           ))}
         </select>
       </div>
-
 
       {/* Users Table */}
       <div className="overflow-x-auto">
@@ -290,11 +314,23 @@ const page = () => {
               })
             ) : (
               <tr>
-                <td
-                  colSpan={8} // span all columns
-                  className="px-6 py-4 text-center text-sm text-gray-500"
-                >
-                  No Employees Admitted At found.
+                <td colSpan={8} className="px-6 py-10 text-center">
+                  <div className="flex flex-col items-center justify-center gap-4 rounded-lg py-8">
+                    {/* Large Icon */}
+                    <FaUserAltSlash className="w-12 h-12 text-gray-400" />
+
+                    {/* Main message */}
+                    <span className="text-lg font-semibold text-gray-600">
+                      No employees found.
+                    </span>
+
+                    {/* Secondary note */}
+                    <small className="text-gray-400">
+                      {debouncedSearch === "" && selectedDepartment === "" && selectedPosition === ""
+                        ? "Start by searching or applying a filter."
+                        : "No employees match your search or filters."}
+                    </small>
+                  </div>
                 </td>
               </tr>
             )}
@@ -316,7 +352,8 @@ const page = () => {
       {/* Update Employee Data Modal */}
       <dialog id="Update_Employee_Data_Modal" className="modal">
         <UpdateEmployeeDataModal
-          refetch={UsersRefetch}
+          refetch={handleRefresh}
+          DepartmentsData={DepartmentsData}
           selectedEmployee={selectedEmployee}
           setSelectedEmployee={setSelectedEmployee}
         />
