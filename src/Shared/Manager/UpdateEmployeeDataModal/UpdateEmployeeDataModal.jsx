@@ -1,18 +1,32 @@
-import useAxiosPublic from '@/Hooks/useAxiosPublic';
-import SharedInput from '@/Shared/SharedInput/SharedInput';
+
+// React components
 import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+
+// Icons
+import { FaPaste } from 'react-icons/fa';
 import { ImCross } from 'react-icons/im';
+
+
+// Packages
 import Swal from 'sweetalert2';
+import { Tooltip } from 'react-tooltip';
+import { useForm } from 'react-hook-form';
+
+// Styles
+import 'react-tooltip/dist/react-tooltip.css';
+
+// Hooks
+import useAxiosPublic from '@/Hooks/useAxiosPublic';
+
+// Shared
+import SharedInput from '@/Shared/SharedInput/SharedInput';
 
 const UpdateEmployeeDataModal = ({
-  user,
   refetch,
   selectedEmployee,
   setSelectedEmployee,
 }) => {
   const axiosPublic = useAxiosPublic();
-
 
   // States
   const [error, setError] = useState(null);
@@ -32,10 +46,13 @@ const UpdateEmployeeDataModal = ({
   useEffect(() => {
     if (selectedEmployee) {
       reset({
-        organization_name: selectedEmployee.organization_name || '',
-        designation_name: selectedEmployee.designation_name || '',
-        department_name: selectedEmployee.department_name || '',
+        city: selectedEmployee.city || '',
+        address: selectedEmployee.address || '',
+        country: selectedEmployee.country || '',
         position_name: selectedEmployee.position_name || '',
+        department_name: selectedEmployee.department_name || '',
+        designation_name: selectedEmployee.designation_name || '',
+        organization_name: selectedEmployee.organization_name || '',
         hire_time: selectedEmployee.hire_time
           ? selectedEmployee.hire_time.split('T')[0]
           : '',
@@ -67,12 +84,15 @@ const UpdateEmployeeDataModal = ({
 
       // Prepare payload
       const payload = {
-        organization_name: data.organization_name?.trim() || null,
-        designation_name: data.designation_name?.trim() || null,
-        department_name: data.department_name?.trim() || null,
-        position_name: data.position_name?.trim() || null,
+        city: data.city?.trim() || null,
         hire_time: data.hire_time || null,
         updatedAt: new Date().toISOString(),
+        country: data.country?.trim() || null,
+        address: data.address?.trim() || null,
+        position_name: data.position_name?.trim() || null,
+        department_name: data.department_name?.trim() || null,
+        designation_name: data.designation_name?.trim() || null,
+        organization_name: data.organization_name?.trim() || null,
       };
 
       // PUT request (email used as identifier)
@@ -109,7 +129,52 @@ const UpdateEmployeeDataModal = ({
     >
       {/* Header */}
       <div className='flex items-center justify-between'>
+        {/* Header */}
         <h3 className="font-bold text-xl">Update User Data</h3>
+
+        {/*  Inside your modal, after the header */}
+        <div className="flex">
+          {/* Paste Button */}
+          <button
+            type="button"
+            data-tooltip-id="paste-tooltip"
+            data-tooltip-content="Paste data from clipboard"
+            onClick={async () => {
+              try {
+                // Read text from clipboard
+                const clipboardText = await navigator.clipboard.readText();
+                // Check if the clipboard text is valid JSON
+                if (!clipboardText) return;
+
+                // Parse JSON
+                const pasteData = JSON.parse(clipboardText);
+
+                // Populate form fields
+                reset({
+                  city: pasteData.city || '',
+                  country: pasteData.country || '',
+                  address: pasteData.address || '',
+                  hire_time: pasteData.hire_time || '',
+                  position_name: pasteData.position_name || '',
+                  department_name: pasteData.department_name || '',
+                  designation_name: pasteData.designation_name || '',
+                  organization_name: pasteData.organization_name || '',
+                });
+              } catch (err) {
+                console.error("Failed to paste data:", err);
+                setError("Failed to read clipboard data. Make sure it's valid JSON.");
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+          >
+            <FaPaste />
+          </button>
+
+          {/* Tooltip Component */}
+          <Tooltip id="paste-tooltip" place="top" effect="solid" />
+        </div>
+
+        {/* Close */}
         <button
           type="button"
           onClick={handleClose}
@@ -131,6 +196,43 @@ const UpdateEmployeeDataModal = ({
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
+        {/* Address */}
+        <SharedInput
+          label="Address"
+          register={register}
+          name="address"
+          defaultValue={selectedEmployee?.address || ""}
+          placeholder="Enter Address"
+          rules={selectedEmployee?.address ? {} : { required: "Address is required" }}
+          error={errors.address}
+        />
+
+        {/* City and Country */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* City */}
+          <SharedInput
+            label="City"
+            register={register}
+            name="city"
+            defaultValue={selectedEmployee?.city || ""}
+            placeholder="Enter City"
+            rules={selectedEmployee?.city ? {} : { required: "City is required" }}
+            error={errors.city}
+          />
+
+          {/* Country */}
+          <SharedInput
+            label="Country"
+            register={register}
+            name="country"
+            defaultValue={selectedEmployee?.country || ""}
+            placeholder="Enter Country"
+            rules={selectedEmployee?.country ? {} : { required: "Country is required" }}
+            error={errors.country}
+          />
+
+        </div>
+
         {/* Organization Name */}
         <SharedInput
           label="Organization Name"
@@ -140,17 +242,6 @@ const UpdateEmployeeDataModal = ({
           placeholder="Enter organization name"
           rules={selectedEmployee?.organization_name ? {} : { required: "Organization Name is required" }}
           error={errors.organization_name}
-        />
-
-        {/* Designation Name */}
-        <SharedInput
-          label="Designation Name"
-          register={register}
-          name="designation_name"
-          defaultValue={selectedEmployee?.designation_name || ""}
-          placeholder="Enter designation name"
-          rules={selectedEmployee?.designation_name ? {} : { required: "Designation Name is required" }}
-          error={errors.designation_name}
         />
 
         {/* Department Name */}
@@ -164,16 +255,30 @@ const UpdateEmployeeDataModal = ({
           error={errors.department_name}
         />
 
-        {/* Position Name */}
-        <SharedInput
-          label="Position Name"
-          register={register}
-          name="position_name"
-          defaultValue={selectedEmployee?.position_name || ""}
-          placeholder="Enter position name"
-          rules={selectedEmployee?.position_name ? {} : { required: "Position Name is required" }}
-          error={errors.position_name}
-        />
+        {/* Position and Designation */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Position Name */}
+          <SharedInput
+            label="Position Name"
+            register={register}
+            name="position_name"
+            defaultValue={selectedEmployee?.position_name || ""}
+            placeholder="Enter position name"
+            rules={selectedEmployee?.position_name ? {} : { required: "Position Name is required" }}
+            error={errors.position_name}
+          />
+
+          {/* Designation Name */}
+          <SharedInput
+            label="Designation Name"
+            register={register}
+            name="designation_name"
+            defaultValue={selectedEmployee?.designation_name || ""}
+            placeholder="Enter designation name"
+            rules={selectedEmployee?.designation_name ? {} : { required: "Designation Name is required" }}
+            error={errors.designation_name}
+          />
+        </div>
 
         {/* Hire Date */}
         <SharedInput
