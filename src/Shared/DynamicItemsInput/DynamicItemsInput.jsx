@@ -1,14 +1,8 @@
 "use client";
 
 import React, { useEffect } from "react";
-
-// Packages
 import { useFieldArray } from "react-hook-form";
-
-// Icons
 import { FaPlus, FaTrash } from "react-icons/fa";
-
-// Shared 
 import SharedInput from "@/Shared/SharedInput/SharedInput";
 
 /**
@@ -28,26 +22,26 @@ const DynamicItemsInput = ({
   control,
   register,
   fieldName = "items",
+  title = "Items / Details",
+  showIndex = true,
   fieldsConfig = [
     {
       type: "text",
       name: "description",
       label: "Description",
-      placeholder: "Item description"
+      placeholder: "Item description",
+      widthClass: "flex-1 min-w-[150px]",
     },
     {
       name: "price",
       type: "number",
       label: "Price (USD)",
-      placeholder: "Price"
-    }
-  ]
+      placeholder: "Price",
+      widthClass: "w-32",
+    },
+  ],
 }) => {
-  // Field array
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: fieldName,
-  });
+  const { fields, append, remove } = useFieldArray({ control, name: fieldName });
 
   // Ensure at least one row exists by default
   useEffect(() => {
@@ -58,7 +52,6 @@ const DynamicItemsInput = ({
     }
   }, [fields, append, fieldsConfig]);
 
-  // Remove row
   const handleRemove = (index) => {
     remove(index);
     if (fields.length === 1) {
@@ -70,42 +63,31 @@ const DynamicItemsInput = ({
 
   return (
     <div className="space-y-3">
-      {/* Label */}
-      <label className="font-semibold text-gray-700 block mb-2">Items / Details</label>
-
-      {/* Horizontal line */}
+      <label className="font-semibold text-gray-700 block mb-2">{title}</label>
       <p className="w-full bg-gray-500 h-[1px]"></p>
 
-      {/* Rows */}
       {fields.map((field, index) => (
         <div key={field.id} className="flex flex-wrap items-end gap-3">
-          {/* Index */}
-          <div className="flex items-center justify-center w-6 text-gray-600 font-medium pb-2">
-            {index + 1}.
-          </div>
+          {showIndex && (
+            <div className="flex items-center justify-center w-6 text-gray-600 font-medium pb-2">
+              {index + 1}.
+            </div>
+          )}
 
-          {/* Input fields */}
           {fieldsConfig.map((f, idx) => (
-            <div
-              key={idx}
-              className={f.width ? `w-${f.width}` : "flex-1 min-w-[150px]"}
-            >
+            <div key={idx} className={f.widthClass || "flex-1 min-w-[150px]"}>
               <SharedInput
                 label={f.label}
                 name={`${fieldName}.${index}.${f.name}`}
                 type={f.type || "text"}
                 placeholder={f.placeholder || ""}
                 register={register}
-                rules={f.rules || (f.type === "number" ? {
-                  required: `${f.label} is required`,
-                  min: { value: 0, message: `${f.label} must be positive` }
-                } : { required: `${f.label} is required` })}
+                rules={f.rules || undefined} // optional by default
                 error={errors?.[fieldName]?.[index]?.[f.name]}
               />
             </div>
           ))}
 
-          {/* Delete button */}
           <div className="flex items-end mt-6">
             <button
               type="button"
@@ -118,10 +100,8 @@ const DynamicItemsInput = ({
         </div>
       ))}
 
-      {/* Horizontal line */}
       <p className="w-full bg-gray-500 h-[1px]"></p>
 
-      {/* Add button */}
       <div className="flex justify-end">
         <button
           type="button"
