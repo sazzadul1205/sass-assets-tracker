@@ -97,7 +97,6 @@ const UpdatedUserDataModal = ({ Refetch, UserData }) => {
           ...payload,
         }));
 
-
         // Show success alert
         Swal.fire({
           icon: "success",
