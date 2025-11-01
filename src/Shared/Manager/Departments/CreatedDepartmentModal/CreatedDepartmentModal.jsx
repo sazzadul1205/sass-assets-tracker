@@ -36,7 +36,6 @@ const CreatedDepartmentModal = ({ UserEmail }) => {
   // Handle Close Function
   const handleClose = () => {
     reset();
-    // Refetch();
     setError(null);
     document.getElementById('Created_Department_Modal').close();
   };
@@ -80,6 +79,7 @@ const CreatedDepartmentModal = ({ UserEmail }) => {
         });
 
         // Reset form
+        Refetch();
         handleClose();
       } else {
         setError(response.data.message || 'Failed to update user data');
@@ -271,7 +271,7 @@ const CreatedDepartmentModal = ({ UserEmail }) => {
           {(isSubmitting || isLoading) ? (
             <span className="loading loading-spinner loading-sm"></span>
           ) : (
-            "Save Details"
+            "Create Department"
           )}
         </button>
       </form>
