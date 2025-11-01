@@ -1,12 +1,10 @@
-"use client";
-
-// React components
-import { useState, useCallback } from "react";
+// React Components
+import { useState, useCallback, useEffect } from "react";
 
 // Packages
 import Cropper from "react-easy-crop";
 
-// Icons
+// Icons`
 import { FaUpload } from "react-icons/fa";
 
 // Utils
@@ -17,28 +15,45 @@ const SharedImageInputCircular = ({
   width = 256,
   height = 256,
   IconSize = 32,
+  clear = false,
   maxSizeMB = 32,
+  rounded = "full",
+  enableCrop = true,
   defaultImage = null,
   label = "Profile Image",
   hint = "Drag & drop or click to upload",
-  rounded = "full",
-  enableCrop = true,
 }) => {
   // State
   const [zoom, setZoom] = useState(1);
   const [error, setError] = useState("");
   const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [imageSrc, setImageSrc] = useState(defaultImage || null);
+  const [imageSrc, setImageSrc] = useState(null); 
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
-  // On crop complete
+  // Update imageSrc if defaultImage changes
+  useEffect(() => {
+    if (defaultImage) {
+      setImageSrc(defaultImage); // show default image
+    }
+  }, [defaultImage]);
+
+  // Clear image when clear prop changes to true
+  useEffect(() => {
+    if (clear) {
+      setImageSrc(null); // remove image preview
+      setCroppedAreaPixels(null); // reset crop area
+      setCrop({ x: 0, y: 0 }); // reset crop position
+      setZoom(1); // reset zoom
+    }
+  }, [clear]);
+
+  // Callback when cropping is complete
   const onCropComplete = useCallback((_, croppedPixels) => {
-    setCroppedAreaPixels(croppedPixels);
+    setCroppedAreaPixels(croppedPixels); // save cropped pixels
   }, []);
 
   // Handle file upload
   const handleFile = (file) => {
-    // Validation
     if (!file) return;
 
     // Check file type
@@ -54,53 +69,47 @@ const SharedImageInputCircular = ({
       return;
     }
 
-    // Read file
     const reader = new FileReader();
-
-    // On load
     reader.onload = async () => {
       setError("");
       const imgData = reader.result;
 
       if (enableCrop) {
-        // Open modal to crop
-        setImageSrc(imgData);
+        setImageSrc(imgData); // show uploaded image
         setCrop({ x: 0, y: 0 });
         setZoom(1);
         setCroppedAreaPixels(null);
-        document.getElementById("crop_modal")?.showModal();
+        document.getElementById("crop_modal")?.showModal(); // open crop modal
       } else {
-        // Skip cropping → directly set image
         setImageSrc(imgData);
         if (onChange) {
           const blob = await fetch(imgData).then((res) => res.blob());
-          onChange(new File([blob], file.name, { type: file.type }));
+          onChange(new File([blob], file.name, { type: file.type })); // send file to parent
         }
       }
     };
 
-    // Read the
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(file); // read file as base64
   };
 
   // Open crop modal manually
   const handleOpenCrop = () => {
     if (enableCrop && imageSrc) {
-      document.getElementById("crop_modal")?.showModal();
+      document.getElementById("crop_modal")?.showModal(); // show modal
     }
   };
 
   // Confirm crop
   const handleCropConfirm = async () => {
     try {
-      const croppedFile = await getCroppedImgCircular(imageSrc, croppedAreaPixels);
-      const previewUrl = URL.createObjectURL(croppedFile);
+      const croppedFile = await getCroppedImgCircular(imageSrc, croppedAreaPixels); // crop image
+      const previewUrl = URL.createObjectURL(croppedFile); // preview cropped file
       setImageSrc(previewUrl);
-      if (onChange) onChange(croppedFile);
-      document.getElementById("crop_modal")?.close();
+      if (onChange) onChange(croppedFile); // send file to parent
+      document.getElementById("crop_modal")?.close(); // close modal
     } catch (err) {
       console.error(err);
-      setError("Failed to crop image.");
+      setError("Failed to crop image."); // show error if fails
     }
   };
 
@@ -108,9 +117,7 @@ const SharedImageInputCircular = ({
     <div className="w-full max-w-sm mx-auto space-y-2">
       {/* Label */}
       {label && (
-        <label className="block text-gray-700 text-center font-semibold">
-          {label}
-        </label>
+        <label className="block text-gray-700 text-center font-semibold">{label}</label>
       )}
 
       {/* Image Preview */}
@@ -119,16 +126,16 @@ const SharedImageInputCircular = ({
         style={{ width, height }}
         onDrop={(e) => {
           e.preventDefault();
-          handleFile(e.dataTransfer.files[0]);
+          handleFile(e.dataTransfer.files[0]); // handle drag & drop
         }}
         onDragOver={(e) => e.preventDefault()}
-        onClick={enableCrop ? handleOpenCrop : undefined}
+        onClick={enableCrop ? handleOpenCrop : undefined} // click to crop
       >
         {imageSrc ? (
           <img
             src={imageSrc}
             alt="Preview"
-            className={`w-full h-full object-cover rounded-${rounded}`}
+            className={`w-full h-full object-cover rounded-${rounded}`} // show image
           />
         ) : (
           <div className="flex flex-col items-center text-gray-400 transition-colors duration-200">
@@ -137,7 +144,7 @@ const SharedImageInputCircular = ({
               className="text-gray-400 group-hover:text-blue-500 transition-colors duration-200"
             />
             <span className="text-center group-hover:text-blue-500 transition-colors duration-200">
-              {hint}
+              {hint} {/* show hint text */}
             </span>
           </div>
         )}
@@ -147,11 +154,11 @@ const SharedImageInputCircular = ({
           type="file"
           accept="image/jpeg,image/png"
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          onChange={(e) => handleFile(e.target.files[0])}
+          onChange={(e) => handleFile(e.target.files[0])} // handle file select
         />
       </div>
 
-      {/* Error */}
+      {/* Error message */}
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
       {/* Cropper Modal */}
@@ -169,7 +176,7 @@ const SharedImageInputCircular = ({
                   image={imageSrc}
                   crop={crop}
                   zoom={zoom}
-                  aspect={1}
+                  aspect={1} // square crop
                   onCropChange={setCrop}
                   onZoomChange={setZoom}
                   onCropComplete={onCropComplete}
@@ -186,13 +193,14 @@ const SharedImageInputCircular = ({
                 max="3"
                 step="0.1"
                 value={zoom}
-                onChange={(e) => setZoom(Number(e.target.value))}
+                onChange={(e) => setZoom(Number(e.target.value))} // adjust zoom
                 className="ml-2 w-32"
               />
             </div>
 
             {/* Buttons */}
             <div className="flex justify-between gap-2 w-full mt-4">
+              {/* Confirm Crop */}
               <button
                 type="button"
                 onClick={handleCropConfirm}
@@ -201,11 +209,10 @@ const SharedImageInputCircular = ({
                 Confirm Crop
               </button>
 
+              {/* Close Modal */}
               <button
                 type="button"
-                onClick={() =>
-                  document.getElementById("crop_modal")?.close()
-                }
+                onClick={() => document.getElementById("crop_modal")?.close()}
                 className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors"
               >
                 Close
