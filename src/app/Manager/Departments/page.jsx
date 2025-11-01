@@ -8,7 +8,7 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 
 // Icons
-import { FaPlus, FaEye, FaEdit } from "react-icons/fa";
+import { FaPlus, FaEye, FaEdit, FaInbox } from "react-icons/fa";
 
 // Packages
 import { useQuery } from "@tanstack/react-query";
@@ -122,7 +122,10 @@ const Page = () => {
             {DepartmentsData && DepartmentsData.length > 0 ? (
               DepartmentsData.map((dept, index) => {
                 const columns = [
+                  // Department Code
                   { value: dept.department_Code || "—", align: "center" },
+
+                  // Department Name + Description
                   {
                     value: (
                       <div>
@@ -136,12 +139,16 @@ const Page = () => {
                     ),
                     align: "left",
                   },
+
+                  // Budget
                   {
                     value: dept.budget?.annual
                       ? `$${dept.budget.annual.toLocaleString()}`
                       : "—",
                     align: "center",
                   },
+
+                  // Created At
                   {
                     value: new Date(dept.createdAt).toLocaleDateString("en-GB", {
                       day: "2-digit",
@@ -150,6 +157,8 @@ const Page = () => {
                     }),
                     align: "center",
                   },
+
+                  // Actions
                   {
                     value: (
                       <div className="flex justify-center gap-3">
@@ -211,13 +220,22 @@ const Page = () => {
               })
             ) : (
               <tr>
-                <td
-                  colSpan={8}
-                  className="px-6 py-4 text-center text-sm text-gray-500 italic"
-                >
-                  No departments found.
+                <td colSpan={8} className="px-6 py-10 text-center">
+                  <div className="flex flex-col items-center justify-center text-gray-500">
+                    {/* Subtle Icon */}
+                    <FaInbox className="text-4xl mb-3 text-gray-400" />
+
+                    {/* Message */}
+                    <p className="text-base font-semibold">No departments found</p>
+
+                    {/* Tip */}
+                    <p className="text-sm text-gray-400 mt-1">
+                      Add a new department to start managing your organization.
+                    </p>
+                  </div>
                 </td>
               </tr>
+
             )}
           </tbody>
 
