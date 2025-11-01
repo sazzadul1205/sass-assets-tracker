@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 // Icons
 import { FiUsers } from "react-icons/fi";
-import { FaRegUser } from "react-icons/fa";
+import { FaInbox, FaRegUser } from "react-icons/fa";
 import { IoLogOutOutline } from "react-icons/io5";
 import { MdOutlineSpaceDashboard } from "react-icons/md";
 
@@ -75,6 +75,16 @@ const layout = ({ children }) => {
       name: "Departments",
       icon: <Department className="w-5 h-5" />,
       path: "/Manager/Departments",
+    },
+    {
+      name: "Asset Categories",
+      icon: <FaInbox className="w-5 h-5" />,
+      path: "/Manager/AssetCategories",
+    },
+    {
+      name: "All Assets",
+      icon: <Department className="w-5 h-5" />,
+      path: "/Manager/AllAssets",
     },
   ];
 

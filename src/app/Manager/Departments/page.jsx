@@ -24,9 +24,9 @@ import Loading from "@/Shared/Loading/Loading";
 import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
 // Shared Modal
-import CreatedDepartmentModal from "@/Shared/Manager/Departments/CreatedDepartmentModal/CreatedDepartmentModal";
 import EditDepartmentModal from "@/Shared/Manager/Departments/EditDepartmentModal/EditDepartmentModal";
 import ViewDepartmentModal from "@/Shared/Manager/Departments/ViewDepartmentModal/ViewDepartmentModal";
+import CreatedDepartmentModal from "@/Shared/Manager/Departments/CreatedDepartmentModal/CreatedDepartmentModal";
 
 const Page = () => {
   const axiosPublic = useAxiosPublic();

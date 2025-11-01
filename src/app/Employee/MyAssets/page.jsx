@@ -63,7 +63,6 @@ const MyAssetsPage = () => {
     keepPreviousData: true,
   });
 
-
   // Loading state
   if (RequestsIsLoading || status === "loading") return <Loading />;
 
