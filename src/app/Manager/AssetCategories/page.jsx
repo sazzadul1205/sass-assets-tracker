@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 
 // Icons
-import { FaEdit, FaInbox, FaPlus, FaTrash } from "react-icons/fa";
+import { FaEdit, FaInbox, FaPlus, FaSearch, FaTrash } from "react-icons/fa";
 
 // Packages
 import Swal from "sweetalert2";
@@ -36,6 +36,11 @@ const page = () => {
   // Add state to track deletion status per category
   const [deletingCategoryId, setDeletingCategoryId] = useState(null);
 
+  // Add this state at the top
+  const [lifeFilter, setLifeFilter] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [depreciationFilter, setDepreciationFilter] = useState("");
+
   // Fetch AssetCategories
   const {
     data: AssetCategoriesData,
@@ -47,6 +52,32 @@ const page = () => {
     queryFn: () =>
       axiosPublic.get(`/AssetCategories`).then((res) => res.data.data),
     keepPreviousData: true,
+  });
+
+  // Filtered Data
+  const filteredCategories = AssetCategoriesData?.filter((category) => {
+    // Filter by search query (Category Name)
+    const matchesSearch = category.category_name
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+    // Filter by Depreciation Rate
+    let matchesDepreciation = true;
+    if (depreciationFilter) {
+      const [min, max] = depreciationFilter.split("-").map(Number);
+      matchesDepreciation =
+        category.depreciation_rate >= min && category.depreciation_rate <= max;
+    }
+
+    // Filter by Expected Life
+    let matchesLife = true;
+    if (lifeFilter) {
+      const [min, max] = lifeFilter.split("-").map(Number);
+      matchesLife =
+        category.useful_life_years >= min && category.useful_life_years <= max;
+    }
+
+    return matchesSearch && matchesDepreciation && matchesLife;
   });
 
   // Handle Loading
@@ -120,7 +151,6 @@ const page = () => {
     }
   };
 
-
   return (
     <div className="p-5">
       {/* Header Section */}
@@ -160,6 +190,53 @@ const page = () => {
         </div>
       </div>
 
+      {/* Filters */}
+      <div className="bg-white border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5">
+        {/* Search Filter */}
+        <div className="flex items-center gap-3 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+          <FaSearch className="text-gray-500 text-lg" />
+          <input
+            type="text"
+            placeholder="Search by category name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
+          />
+        </div>
+
+        {/* Depreciation Rate Filter */}
+        <select
+          value={depreciationFilter}
+          onChange={(e) => setDepreciationFilter(e.target.value)}
+          className="min-w-64 border border-gray-200 rounded-xl px-4 py-2 text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+        >
+          <option value="">All Depreciation Rates</option>
+          <option value="0-10">0 - 10%</option>
+          <option value="11-20">11 - 20%</option>
+          <option value="21-30">21 - 30%</option>
+          <option value="31-40">31 - 40%</option>
+          <option value="41-50">41 - 50%</option>
+          <option value="51-60">51 - 60%</option>
+          <option value="61-70">61 - 70%</option>
+          <option value="71-80">71 - 80%</option>
+          <option value="81-90">81 - 90%</option>
+          <option value="91-100">91 - 100%</option>
+        </select>
+
+        {/* Expected Life Filter */}
+        <select
+          value={lifeFilter}
+          onChange={(e) => setLifeFilter(e.target.value)}
+          className="min-w-64 border border-gray-200 rounded-xl px-4 py-2 text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+        >
+          <option value="">All Expected Life</option>
+          <option value="1-2">1 - 2 years</option>
+          <option value="3-5">3 - 5 years</option>
+          <option value="6-10">6 - 10 years</option>
+          <option value="11-20">11 - 20 years</option>
+        </select>
+      </div>
+
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200 rounded-lg">
@@ -171,6 +248,7 @@ const page = () => {
                 { label: "Code", align: "left" },
                 { label: "Category Name", align: "left" },
                 { label: "Depreciation Rate (%)", align: "center" },
+                { label: "Expected Life", align: "center" },
                 { label: "Created At", align: "center" },
                 { label: "Actions", align: "center" },
               ].map((col, idx) => (
@@ -191,8 +269,8 @@ const page = () => {
 
           {/* Table Body */}
           <tbody>
-            {AssetCategoriesData && AssetCategoriesData.length > 0 ? (
-              AssetCategoriesData.map((category, index) => {
+            {filteredCategories && filteredCategories.length > 0 ? (
+              filteredCategories.map((category, index) => {
                 const columns = [
                   // Category Code
                   {
@@ -249,6 +327,14 @@ const page = () => {
                   {
                     value: category.depreciation_rate
                       ? `${category.depreciation_rate}%`
+                      : "—",
+                    align: "center",
+                  },
+
+                  // Depreciation Rate
+                  {
+                    value: category.useful_life_years
+                      ? `${category.useful_life_years} years`
                       : "—",
                     align: "center",
                   },
@@ -336,15 +422,10 @@ const page = () => {
               <tr>
                 <td colSpan={6} className="px-6 py-10 text-center">
                   <div className="flex flex-col items-center justify-center text-gray-500">
-                    {/* Subtle Icon */}
                     <FaInbox className="text-4xl mb-3 text-gray-400" />
-
-                    {/* Message */}
                     <p className="text-base font-semibold">No asset categories found</p>
-
-                    {/* Optional Tip */}
                     <p className="text-sm text-gray-400 mt-1">
-                      Try adding a new category to get started.
+                      Try adjusting your filters or adding a new category.
                     </p>
                   </div>
                 </td>
