@@ -24,7 +24,7 @@ import SharedHeader from '@/Shared/SharedHeader/SharedHeader';
 // Modals
 import EditAssetModal from "@/Shared/Manager/AllAssets/EditAssetModal/EditAssetModal";
 import CreatedAssetModal from "@/Shared/Manager/AllAssets/CreatedAssetModal/CreatedAssetModal";
-import CategoryToIcon from "@/Shared/Manager/AllAssets/CategoryToIcon/CategorytoIcon";
+import CategoryToIcon from "@/Shared/Manager/AllAssets/CategoryToIcon/CategoryToIcon";
 
 const page = () => {
   const axiosPublic = useAxiosPublic();
@@ -80,6 +80,7 @@ const page = () => {
     AssetsRefetch();
     AssetCategoriesNamesRefetch();
   }
+  console.log(AssetsData);
 
   return (
     <div className="p-5">
@@ -126,55 +127,63 @@ const page = () => {
           {/* Table Body */}
           <tbody>
             {AssetsData && AssetsData.length > 0 ? (
-              AssetsData.map((asset, index) => {
-                const columns = [
-                  // Asset Category Code
-                  {
-                    value:
-                      <>
-                        <CategoryToIcon category={asset?.category_id} />
-                      </> || "—",
-                    align: "left",
-                  },
+              AssetsData.map((asset, index) => (
+                <tr
+                  key={asset._id || index}
+                  className="border-t border-gray-200 hover:bg-gray-50 transition"
+                >
+                  {/* Category Icon */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
+                    {asset?.category_id ? (
+                      <CategoryToIcon category={asset} />
+                    ) : (
+                      "—"
+                    )}
+                  </td>
 
+                  {/* Asset Code */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
+                    {asset.asset_code || "—"}
+                  </td>
 
-                ];
+                  {/* Category Name */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
+                    {asset.category_id?.category_name || "—"}
+                  </td>
 
-                return (
-                  <tr
-                    key={asset._id || index}
-                    className="border-t border-gray-200 hover:bg-gray-50 transition"
-                  >
-                    {columns.map((col, i) => (
-                      <td
-                        key={i}
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${col.align === "left"
-                          ? "text-left"
-                          : col.align === "center"
-                            ? "text-center"
-                            : "text-right"
-                          }`}
-                      >
-                        {col.value}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })
+                  {/* Depreciation Rate */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    {asset.depreciation_rate ?? "—"}
+                  </td>
+
+                  {/* Expected Life */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    {asset.expected_life ?? "—"}
+                  </td>
+
+                  {/* Created At */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    {asset.createdAt ? new Date(asset.createdAt).toLocaleDateString() : "—"}
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                    {/* Placeholder for actions (edit/delete) */}
+                    <button className="text-blue-600 hover:underline">Edit</button>
+                  </td>
+                </tr>
+              ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center">
+                <td colSpan={7} className="px-6 py-10 text-center">
                   <div className="flex flex-col items-center justify-center text-gray-500">
-                    <FaInbox className="text-4xl mb-3 text-gray-400" />
                     <p className="text-base font-semibold">No assets found</p>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Try adjusting your filters or adding a new category.
-                    </p>
                   </div>
                 </td>
               </tr>
             )}
           </tbody>
+
         </table>
       </div>
 
