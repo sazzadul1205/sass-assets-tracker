@@ -7,9 +7,9 @@ import { usePathname, useRouter } from "next/navigation";
 
 // Icons
 import { FiUsers } from "react-icons/fi";
-import { FaInbox, FaRegUser } from "react-icons/fa";
 import { IoLogOutOutline } from "react-icons/io5";
 import { MdOutlineSpaceDashboard } from "react-icons/md";
+import { FaCubes, FaInbox, FaRegUser } from "react-icons/fa";
 
 // Shared
 import ManagerNavbar from "@/Shared/Manager/ManagerNavbar/ManagerNavbar";
@@ -83,7 +83,7 @@ const layout = ({ children }) => {
     },
     {
       name: "All Assets",
-      icon: <Department className="w-5 h-5" />,
+      icon: <FaCubes className="w-5 h-5" />,
       path: "/Manager/AllAssets",
     },
   ];

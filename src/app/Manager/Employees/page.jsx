@@ -24,6 +24,7 @@ import Loading from '@/Shared/Loading/Loading';
 // Modals
 import ViewEmployeeDataModal from '@/Shared/Manager/Employees/ViewEmployeeDataModal/ViewEmployeeDataModal';
 import UpdateEmployeeDataModal from '@/Shared/Manager/Employees/UpdateEmployeeDataModal/UpdateEmployeeDataModal';
+import SharedHeader from '@/Shared/SharedHeader/SharedHeader';
 
 const page = () => {
   const axiosPublic = useAxiosPublic();
@@ -37,6 +38,7 @@ const page = () => {
   const [selectedPosition, setSelectedPosition] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
 
+  // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchTerm.trim().toLowerCase());
@@ -120,20 +122,12 @@ const page = () => {
   return (
     <div className="p-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800 flex items-center gap-2">
-            <FaUsers size={28} className="text-blue-600" />
-            All Employees
-          </h1>
-          <p className="mt-1 text-gray-500 text-sm sm:text-base">
-            View and manage all registered employees in the system
-          </p>
-          <p className="mt-2 text-xs sm:text-sm text-gray-400 italic">
-            Tip: Use search and filters to quickly find specific employees.
-          </p>
-        </div>
-      </div>
+      <SharedHeader
+        title="All Employees"
+        description="View and manage all registered employees in the system."
+        tip="Tip: Use search and filters to quickly find specific employees."
+        icon={<FaUsers size={32} className="text-blue-600" />}
+      />
 
       {/* Search and Filters  */}
       <div className="bg-white border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5">

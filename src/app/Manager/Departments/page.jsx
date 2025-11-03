@@ -8,7 +8,7 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 
 // Icons
-import { FaPlus, FaEye, FaEdit, FaInbox } from "react-icons/fa";
+import { FaEye, FaEdit, FaInbox } from "react-icons/fa";
 
 // Packages
 import { useQuery } from "@tanstack/react-query";
@@ -19,6 +19,7 @@ import Department from "../../../../public/svgs/Department";
 // Shared 
 import Error from "@/Shared/Error/Error";
 import Loading from "@/Shared/Loading/Loading";
+import SharedHeader from "@/Shared/SharedHeader/SharedHeader";
 
 // Hooks
 import useAxiosPublic from "@/Hooks/useAxiosPublic";
@@ -64,30 +65,16 @@ const Page = () => {
   return (
     <div className="p-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800 flex items-center gap-2">
-            <Department color="#3B82F6" width={40} height={40} />
-            All Departments
-          </h1>
-          <p className="mt-1 text-gray-500 text-sm sm:text-base">
-            Manage all company departments, roles, and budgets
-          </p>
-        </div>
-
-        {/* Add Button */}
-        <button
-          onClick={() =>
-            document.getElementById("Created_Department_Modal").showModal()
-          }
-          className="flex items-center gap-3 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold border border-blue-700
-            shadow-md hover:shadow-xl hover:bg-blue-700 transition-all
-            duration-300 ease-in-out transform hover:-translate-y-0.5"
-        >
-          <FaPlus size={22} />
-          Create a New Department
-        </button>
-      </div>
+      <SharedHeader
+        title="All Departments"
+        description="Manage all company departments, roles, and budgets."
+        tip="Tip: Keep department details updated for better coordination."
+        icon={<Department color="#3B82F6" width={40} height={40} />}
+        buttonLabel="Create a New Department"
+        onAddClick={() =>
+          document.getElementById("Created_Department_Modal")?.showModal()
+        }
+      />
 
       {/* Table */}
       <div className="overflow-x-auto">
