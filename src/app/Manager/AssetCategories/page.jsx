@@ -412,7 +412,7 @@ const page = () => {
         </table>
       </div>
 
-      {/* Create Department Modal */}
+      {/* Create Category Modal */}
       <dialog id="Create_New_Category_Modal" className="modal">
         <CreatedCategoryModal
           Refetch={AssetCategoriesRefetch}
