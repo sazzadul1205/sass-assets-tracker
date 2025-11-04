@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 
 // Packages
 import { useQuery } from "@tanstack/react-query";
@@ -11,7 +11,7 @@ import "react-tooltip/dist/react-tooltip.css";
 // Hooks
 import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
-const CategoryToIcon = ({ category }) => {
+const CategoryToIcon = ({ category, onCategoryFetched }) => {
   const axiosPublic = useAxiosPublic();
 
   const {
@@ -30,6 +30,18 @@ const CategoryToIcon = ({ category }) => {
   // Placeholder styles for loading
   const placeholderStyle =
     "w-12 h-12 flex items-center justify-center rounded-lg bg-gray-200 animate-pulse";
+
+
+  // Notify parent with the fetched category
+  useEffect(() => {
+    if (AssetIconData) {
+      onCategoryFetched?.({
+        _id: AssetIconData._id,
+        category_name: AssetIconData.category_name,
+      });
+    }
+  }, [AssetIconData, onCategoryFetched]);
+
 
   return (
     <>

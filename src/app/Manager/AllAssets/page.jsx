@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 
 // Icons
-import { FaCubes } from 'react-icons/fa';
+import { FaCubes, FaEdit, FaEye, FaTrash } from 'react-icons/fa';
 
 // Packages
 import { useQuery } from "@tanstack/react-query";
@@ -23,8 +23,9 @@ import SharedHeader from '@/Shared/SharedHeader/SharedHeader';
 
 // Modals
 import EditAssetModal from "@/Shared/Manager/AllAssets/EditAssetModal/EditAssetModal";
-import CreatedAssetModal from "@/Shared/Manager/AllAssets/CreatedAssetModal/CreatedAssetModal";
 import CategoryToIcon from "@/Shared/Manager/AllAssets/CategoryToIcon/CategoryToIcon";
+import CreatedAssetModal from "@/Shared/Manager/AllAssets/CreatedAssetModal/CreatedAssetModal";
+import ViewAssetModal from "@/Shared/Manager/AllAssets/ViewAssetModal/ViewAssetModal";
 
 const page = () => {
   const axiosPublic = useAxiosPublic();
@@ -32,6 +33,8 @@ const page = () => {
 
   // Selected Asset State
   const [selectedAsset, setSelectedAsset] = useState(null);
+
+  const [categoriesArray, setCategoriesArray] = useState([]);
 
   // Fetch Asset Categories Names & _id
   const {
@@ -80,7 +83,19 @@ const page = () => {
     AssetsRefetch();
     AssetCategoriesNamesRefetch();
   }
-  console.log(AssetsData);
+
+  // Handle category fetched from CategoryToIcon
+  const handleCategoryFetched = (cat) => {
+    setCategoriesArray((prev) => {
+      // avoid duplicates
+      if (!prev.find((c) => c._id === cat._id)) {
+        return [...prev, cat];
+      }
+      return prev;
+    });
+  };
+
+  console.log(AssetCategoriesNamesData);
 
   return (
     <div className="p-5">
@@ -102,10 +117,11 @@ const page = () => {
             <tr>
               {[
                 { label: "Category", align: "left" },
-                { label: "Code", align: "left" },
-                { label: "Category Name", align: "left" },
-                { label: "Depreciation Rate (%)", align: "center" },
-                { label: "Expected Life", align: "center" },
+                { label: "Asset Name", align: "left" },
+                { label: "Brand", align: "left" },
+                { label: "Condition", align: "center" },
+                { label: "Department", align: "center" },
+                { label: "assigned_to", align: "center" },
                 { label: "Created At", align: "center" },
                 { label: "Actions", align: "center" },
               ].map((col, idx) => (
@@ -130,47 +146,85 @@ const page = () => {
               AssetsData.map((asset, index) => (
                 <tr
                   key={asset._id || index}
-                  className="border-t border-gray-200 hover:bg-gray-50 transition"
+                  className="border-t border-gray-200 hover:bg-gray-50 transition text-gray-900"
                 >
                   {/* Category Icon */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-left cursor-default">
                     {asset?.category_id ? (
-                      <CategoryToIcon category={asset} />
+                      <CategoryToIcon
+                        category={asset}
+                        onCategoryFetched={handleCategoryFetched}
+                      />
                     ) : (
                       "—"
                     )}
                   </td>
 
                   {/* Asset Code */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
-                    {asset.asset_code || "—"}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-left cursor-default">
+                    {asset.asset_name || "—"}
                   </td>
 
-                  {/* Category Name */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-left">
-                    {asset.category_id?.category_name || "—"}
+                  {/* Brand Name */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-left cursor-default">
+                    {asset.brand_name || "—"}
                   </td>
 
-                  {/* Depreciation Rate */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                    {asset.depreciation_rate ?? "—"}
+                  {/* Condition */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
+                    {asset.condition || "—"}
                   </td>
 
-                  {/* Expected Life */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                    {asset.expected_life ?? "—"}
+                  {/* Department */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
+                    {asset.department || "—"}
+                  </td>
+
+                  {/* Assigned To */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
+                    {asset.assigned_to || "—"}
                   </td>
 
                   {/* Created At */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                    {asset.createdAt ? new Date(asset.createdAt).toLocaleDateString() : "—"}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
+                    {asset.createdAt
+                      ? new Date(asset.createdAt).toLocaleDateString()
+                      : "—"}
                   </td>
 
                   {/* Actions */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                    {/* Placeholder for actions (edit/delete) */}
-                    <button className="text-blue-600 hover:underline">Edit</button>
+                  <td className="flex justify-center py-4 px-3 gap-3">
+                    {/* View Details */}
+                    <button
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 w-32 shadow-md hover:shadow-lg"
+                      onClick={() => handleViewDetails(asset)}
+                    >
+                      <FaEye className="text-base" />
+                      View
+                    </button>
+
+                    {/* Edit */}
+                    <button
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 w-28 shadow-md hover:shadow-lg"
+                      onClick={() => {
+                        setSelectedAsset(asset);
+                        document.getElementById("Edit_Asset_Modal").showModal();
+                      }}
+                    >
+                      <FaEdit className="text-base" />
+                      Edit
+                    </button>
+
+                    {/* Delete */}
+                    <button
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 w-28 shadow-md hover:shadow-lg"
+                      onClick={() => handleDeleteAsset(asset._id)}
+                    >
+                      <FaTrash className="text-base" />
+                      Delete
+                    </button>
                   </td>
+
                 </tr>
               ))
             ) : (
@@ -183,10 +237,8 @@ const page = () => {
               </tr>
             )}
           </tbody>
-
         </table>
       </div>
-
 
       {/* Create Asset Modal */}
       <dialog id="Create_New_Asset_Modal" className="modal">
@@ -204,6 +256,19 @@ const page = () => {
       <dialog id="Edit_Asset_Modal" className="modal">
         <EditAssetModal
           Refetch={refetchAll}
+          selectedAsset={selectedAsset}
+          UserEmail={session?.user?.email}
+          setSelectedAsset={setSelectedAsset}
+          CategoriesOptions={AssetCategoriesNamesData}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* View Asset Modal */}
+      <dialog id="View_Asset_Modal" className="modal">
+        <ViewAssetModal
           selectedAsset={selectedAsset}
           setSelectedAsset={setSelectedAsset}
         />
