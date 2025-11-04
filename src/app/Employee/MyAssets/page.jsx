@@ -68,12 +68,10 @@ const MyAssetsPage = () => {
 
   // Error state
   if (RequestsError) {
-    console.error(RequestsError);
-    const errorMessage =
-      typeof RequestsError === "string"
-        ? RequestsError
-        : RequestsError?.response?.data?.message || RequestsError?.message || "Something went wrong.";
-    return <Error message={errorMessage} />;
+    console.error("RequestsError:", RequestsError);
+
+    // Pass all errors to the Error component as an array
+    return <Error errors={[RequestsError]} />;
   }
 
   // Apply filters

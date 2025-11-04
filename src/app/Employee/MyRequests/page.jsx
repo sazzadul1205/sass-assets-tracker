@@ -80,15 +80,11 @@ const Page = () => {
 
   // Error Handler
   if (RequestsError || RequestsStatusError) {
-    const activeError = RequestsError || RequestsStatusError;
-    const errorMessage =
-      typeof activeError === "string"
-        ? activeError
-        : activeError?.response?.data?.message ||
-        activeError?.message ||
-        "Something went wrong.";
-    console.error("Error fetching requests or status:", activeError);
-    return <Error message={errorMessage} />;
+    console.error("RequestsError:", RequestsError);
+    console.error("RequestsStatusError:", RequestsStatusError);
+
+    // Pass all errors to the Error component as an array
+    return <Error errors={[RequestsError, RequestsStatusError]} />;
   }
 
   // Refetch All Handler

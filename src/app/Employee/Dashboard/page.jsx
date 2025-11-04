@@ -81,15 +81,11 @@ const Page = () => {
 
   // Error Handling
   if (RequestsStatusError || LogStatusError) {
-    const activeError = RequestsStatusError || LogStatusError;
-    const errorMessage =
-      typeof activeError === "string"
-        ? activeError
-        : activeError?.response?.data?.message ||
-        activeError?.message ||
-        "Something went wrong.";
-    console.error("Error fetching requests or logs:", activeError);
-    return <Error message={errorMessage} />;
+    console.error("RequestsStatusError:", RequestsStatusError);
+    console.error("LogStatusError:", LogStatusError);
+
+    // Pass all errors to the Error component as an array
+    return <Error errors={[RequestsStatusError, LogStatusError]} />;
   }
 
   return (

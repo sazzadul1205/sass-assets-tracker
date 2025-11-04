@@ -64,15 +64,10 @@ const ProfilePage = () => {
 
   // Error Handler
   if (error) {
-    const activeError = error;
-    const errorMessage =
-      typeof activeError === "string"
-        ? activeError
-        : activeError?.response?.data?.message ||
-        activeError?.message ||
-        "Something went wrong.";
-    console.error("Error fetching requests or status:", activeError);
-    return <Error message={errorMessage} />;
+    console.error("error:", error);
+
+    // Pass all errors to the Error component as an array
+    return <Error errors={[error]} />;
   }
 
   // Date Formatter
