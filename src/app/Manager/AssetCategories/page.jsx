@@ -167,9 +167,10 @@ const page = () => {
       />
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5">
+      <div className="bg-white border border-gray-200 rounded-xl flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4 p-5">
+
         {/* Search Filter */}
-        <div className="flex items-center gap-3 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus-within:ring-2 focus-within:ring-blue-500 transition-all">
+        <div className="flex items-center gap-3 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
           <FaSearch className="text-gray-500 text-lg" />
           <input
             type="text"
@@ -184,7 +185,7 @@ const page = () => {
         <select
           value={depreciationFilter}
           onChange={(e) => setDepreciationFilter(e.target.value)}
-          className="min-w-64 border border-gray-200 rounded-xl px-4 py-2 text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+          className="min-w-64 border border-gray-200 rounded-xl px-4 py-2 text-gray-700 bg-white cursor-pointer focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
         >
           <option value="">All Depreciation Rates</option>
           <option value="0-10">0 - 10%</option>
@@ -203,7 +204,7 @@ const page = () => {
         <select
           value={lifeFilter}
           onChange={(e) => setLifeFilter(e.target.value)}
-          className="min-w-64 border border-gray-200 rounded-xl px-4 py-2 text-gray-700 focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+          className="min-w-64 border border-gray-200 rounded-xl px-4 py-2 text-gray-700 bg-white cursor-pointer focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
         >
           <option value="">All Expected Life</option>
           <option value="1-2">1 - 2 years</option>
@@ -350,8 +351,7 @@ const page = () => {
 
                         {/* Remove Button */}
                         <button
-                          className={`flex items-center justify-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-all duration-200 w-28 shadow-md hover:shadow-lg ${deletingCategoryId === category._id ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700 text-white"
-                            }`}
+                          className={`flex items-center justify-center gap-2 px-4 py-2.5 text-sm rounded-lg transition-all duration-200 w-28 shadow-md hover:shadow-lg ${deletingCategoryId === category._id ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700 text-white"}`}
                           disabled={deletingCategoryId === category._id}
                           onClick={() => handleDeleteCategory(category._id)}
                         >
