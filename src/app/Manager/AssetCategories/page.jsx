@@ -89,12 +89,10 @@ const page = () => {
 
   // Handle errors
   if (AssetCategoriesError) {
-    console.error(AssetCategoriesError);
-    const errorMessage =
-      typeof AssetCategoriesError === "string"
-        ? AssetCategoriesError
-        : AssetCategoriesError?.response?.data?.message || AssetCategoriesError?.message || "Something went wrong.";
-    return <Error message={errorMessage} />;
+    console.error("AssetCategoriesError:", AssetCategoriesError);
+
+    // Pass all errors to the Error component as an array
+    return <Error errors={[AssetCategoriesError]} />;
   }
 
   // Delete Category Handler

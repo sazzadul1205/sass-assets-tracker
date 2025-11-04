@@ -107,13 +107,13 @@ const page = () => {
 
   // Handle errors
   if (AssetsError || AssetCategoriesNamesError) {
-    console.error(AssetCategoriesNamesError);
-    const errorMessage =
-      typeof AssetCategoriesNamesError === "string"
-        ? AssetCategoriesNamesError
-        : AssetCategoriesNamesError?.response?.data?.message || AssetCategoriesNamesError?.message || "Something went wrong.";
-    return <Error message={errorMessage} />;
+    console.error("AssetsError:", AssetsError);
+    console.error("AssetCategoriesNamesError:", AssetCategoriesNamesError);
+
+    // Pass all errors to the Error component as an array
+    return <Error errors={[AssetsError, AssetCategoriesNamesError]} />;
   }
+
 
   // Handle Delete Asset
   const refetchAll = () => {
@@ -270,8 +270,8 @@ const page = () => {
                 { label: "Asset Name", align: "left" },
                 { label: "Brand", align: "left" },
                 { label: "Condition", align: "center" },
-                { label: "Department", align: "center" },
-                { label: "assigned_to", align: "center" },
+                { label: "Purchase Price", align: "center" },
+                { label: "Warranty Period", align: "center" },
                 { label: "Current Status", align: "center" },
                 { label: "Actions", align: "center" },
               ].map((col, idx) => (
@@ -328,12 +328,19 @@ const page = () => {
 
                   {/* Department */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
-                    {asset.department || "—"}
+                    {asset.purchase_price || "—"}
                   </td>
 
                   {/* Assigned To */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
-                    {asset.assigned_to || "—"}
+                  <td className=" px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
+                    {asset.warranty_period || "—"} Month's
+                    <p className="text-xs text-gray-500" >
+                      (   {new Date(asset.warranty_expiry_date).toLocaleString("en-GB", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })})
+                    </p>
                   </td>
 
                   {/* Created At */}
@@ -392,7 +399,7 @@ const page = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center">
+                <td colSpan={8} className="px-6 py-10 text-center">
                   <div className="flex flex-col items-center justify-center text-gray-500">
                     <FaInbox className="text-4xl mb-3 text-gray-400" />
                     <p className="text-base font-semibold">No asset found</p>

@@ -54,12 +54,10 @@ const Page = () => {
 
   // Handle errors
   if (DepartmentsError) {
-    console.error(DepartmentsError);
-    const errorMessage =
-      typeof DepartmentsError === "string"
-        ? DepartmentsError
-        : DepartmentsError?.response?.data?.message || DepartmentsError?.message || "Something went wrong.";
-    return <Error message={errorMessage} />;
+    console.error("DepartmentsError:", DepartmentsError);
+
+    // Pass all errors to the Error component as an array
+    return <Error errors={[DepartmentsError]} />;
   }
 
   return (

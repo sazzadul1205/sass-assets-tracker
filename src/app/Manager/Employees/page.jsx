@@ -105,12 +105,11 @@ const page = () => {
 
   // Error state
   if (UsersError || DepartmentsError) {
-    console.error(UsersError);
-    const errorMessage =
-      typeof UsersError === "string"
-        ? UsersError
-        : UsersError?.response?.data?.message || UsersError?.message || "Something went wrong.";
-    return <Error message={errorMessage} />;
+    console.error("UsersError:", UsersError);
+    console.error("DepartmentsError:", DepartmentsError);
+
+    // Pass all errors to the Error component as an array
+    return <Error errors={[UsersError, DepartmentsError]} />;
   }
 
   // Handle Refresh

@@ -17,6 +17,7 @@ import ManagerNavbar from "@/Shared/Manager/ManagerNavbar/ManagerNavbar";
 // SweetAlert for confirmation
 import Swal from "sweetalert2";
 import Department from "../../../public/svgs/Department";
+import AssignAsset from "../../../public/svgs/AssignAsset";
 
 
 const layout = ({ children }) => {
@@ -85,6 +86,11 @@ const layout = ({ children }) => {
       name: "All Assets",
       icon: <FaCubes className="w-5 h-5" />,
       path: "/Manager/AllAssets",
+    },
+    {
+      name: "Assign Assets",
+      icon: <AssignAsset className="w-5 h-5" />,
+      path: "/Manager/AssignAsset",
     },
   ];
 
