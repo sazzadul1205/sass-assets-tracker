@@ -20,11 +20,11 @@ import useAxiosPublic from '@/Hooks/useAxiosPublic';
 // Shared
 import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
+import SharedHeader from '@/Shared/SharedHeader/SharedHeader';
 
 // Modals
 import ViewEmployeeDataModal from '@/Shared/Manager/Employees/ViewEmployeeDataModal/ViewEmployeeDataModal';
 import UpdateEmployeeDataModal from '@/Shared/Manager/Employees/UpdateEmployeeDataModal/UpdateEmployeeDataModal';
-import SharedHeader from '@/Shared/SharedHeader/SharedHeader';
 
 const page = () => {
   const axiosPublic = useAxiosPublic();

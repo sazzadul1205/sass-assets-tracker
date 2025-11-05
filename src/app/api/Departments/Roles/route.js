@@ -12,7 +12,7 @@ export const GET = async () => {
     const departments = await departmentCollection
       .find(
         {},
-        { projection: { department_Name: 1, description: 1, roles: 1, _id: 0 } }
+        { projection: { department_Name: 1, description: 1, roles: 1, _id: 1 } }
       )
       .toArray();
 

@@ -11,6 +11,7 @@ import { useSession } from "next-auth/react";
 import { FaCubes, FaEdit, FaEye, FaTrash, FaSearch, FaInbox } from 'react-icons/fa';
 
 // Packages
+import Swal from "sweetalert2";
 import { useQuery } from "@tanstack/react-query";
 
 // Hooks
@@ -20,13 +21,12 @@ import useAxiosPublic from '@/Hooks/useAxiosPublic';
 import Error from "@/Shared/Error/Error";
 import Loading from "@/Shared/Loading/Loading";
 import SharedHeader from '@/Shared/SharedHeader/SharedHeader';
+import CategoryToIcon from "@/Shared/Manager/AllAssets/CategoryToIcon/CategoryToIcon";
 
 // Modals
 import EditAssetModal from "@/Shared/Manager/AllAssets/EditAssetModal/EditAssetModal";
-import CategoryToIcon from "@/Shared/Manager/AllAssets/CategoryToIcon/CategoryToIcon";
 import CreatedAssetModal from "@/Shared/Manager/AllAssets/CreatedAssetModal/CreatedAssetModal";
 import ViewAssetModal from "@/Shared/Manager/AllAssets/ViewAssetModal/ViewAssetModal";
-import Swal from "sweetalert2";
 
 const page = () => {
   const axiosPublic = useAxiosPublic();
