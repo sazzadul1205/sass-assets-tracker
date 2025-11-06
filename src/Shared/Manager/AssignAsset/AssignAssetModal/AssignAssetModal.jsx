@@ -94,11 +94,10 @@ const AssignAssetModal = ({
         isPrivate,
         isLimited,
         assigned_by: UserEmail,
+        current_status: "Assigned",
         updatedAt: new Date().toISOString(),
         assigned_at: new Date().toISOString(),
       };
-
-      console.log("Payload:", payload);
 
       const response = await axiosPublic.put(`/Assets/${selectedAsset._id}`, payload);
 
