@@ -4,36 +4,27 @@ import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 
 /** GET: Fetch asset by ID */
-export const GET = async (request, { params }) => {
+export const GET = async (req, { params }) => {
   try {
-    const { id } = params;
-
-    if (!ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid asset ID format" },
-        { status: 400 }
-      );
-    }
+    const { id } = params; // NO await here
 
     const db = await connectDB();
-    const assetCollection = db.collection("Assets");
+    const categoryCollection = db.collection("Assets");
 
-    const asset = await assetCollection.findOne({ _id: new ObjectId(id) });
+    const query = id ? { _id: new ObjectId(id) } : {};
 
-    if (!asset) {
-      return NextResponse.json(
-        { success: false, message: "Asset not found" },
-        { status: 404 }
-      );
-    }
+    const categories = await categoryCollection.find(query).toArray();
 
-    return NextResponse.json({ success: true, data: asset }, { status: 200 });
+    return NextResponse.json(
+      { success: true, data: categories },
+      { status: 200 }
+    );
   } catch (error) {
-    console.error("Error fetching asset:", error);
+    console.error("Error fetching asset categories:", error);
     return NextResponse.json(
       {
         success: false,
-        message: "Internal Server Error while fetching asset",
+        message: "Failed to fetch asset category",
         error:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
@@ -45,7 +36,7 @@ export const GET = async (request, { params }) => {
 /** PUT: Update asset by ID */
 export const PUT = async (request, { params }) => {
   try {
-    const { id } = params;
+    const { id } = params; // NO await here
 
     if (!ObjectId.isValid(id)) {
       return NextResponse.json(
@@ -55,7 +46,6 @@ export const PUT = async (request, { params }) => {
     }
 
     const body = await request.json();
-
     if (!body || Object.keys(body).length === 0) {
       return NextResponse.json(
         { success: false, message: "No update data provided" },
@@ -105,7 +95,7 @@ export const PUT = async (request, { params }) => {
 /** DELETE: Delete asset by ID */
 export const DELETE = async (request, { params }) => {
   try {
-    const { id } = params;
+    const { id } = params; // NO await here
 
     if (!ObjectId.isValid(id)) {
       return NextResponse.json(

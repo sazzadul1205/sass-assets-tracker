@@ -1,10 +1,13 @@
-// api/AssetCategories/Icon/[id]/route.js
+// src/app/api/AssetCategories/Icon/[id]/route.js
 import { connectDB } from "@/lib/connectDB";
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 
-export const GET = async (request, { params }) => {
+export const GET = async (request, context) => {
   try {
+    const params = await context.params;
+
+    // Connect to MongoDB
     const db = await connectDB();
     const categoryCollection = db.collection("AssetCategories");
 
@@ -33,7 +36,6 @@ export const GET = async (request, { params }) => {
     );
   } catch (error) {
     console.error("Error fetching asset category icons:", error);
-
     return NextResponse.json(
       {
         success: false,

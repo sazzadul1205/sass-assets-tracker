@@ -73,3 +73,49 @@ export const PUT = async (req, { params }) => {
     );
   }
 };
+
+// GET: Fetch department by ID
+export const GET = async (req, { params }) => {
+  try {
+    const { id } = params;
+
+    // Validate ID
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid department ID format" },
+        { status: 400 }
+      );
+    }
+
+    // Connect to database
+    const db = await connectDB();
+    const departmentCollection = db.collection("Departments");
+
+    // Find department
+    const department = await departmentCollection.findOne({
+      _id: new ObjectId(id),
+    });
+
+    if (!department) {
+      return NextResponse.json(
+        { success: false, message: "Department not found" },
+        { status: 404 }
+      );
+    }
+
+    // Success
+    return NextResponse.json({ success: true, department }, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching department:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Internal Server Error while fetching department",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
+      { status: 500 }
+    );
+  }
+};
