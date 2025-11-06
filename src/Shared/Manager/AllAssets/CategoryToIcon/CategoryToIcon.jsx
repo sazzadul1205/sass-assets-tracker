@@ -14,6 +14,7 @@ import useAxiosPublic from "@/Hooks/useAxiosPublic";
 const CategoryToIcon = ({ category, onCategoryFetched }) => {
   const axiosPublic = useAxiosPublic();
 
+  // Fetch category icon
   const {
     data: AssetIconData,
     isLoading,

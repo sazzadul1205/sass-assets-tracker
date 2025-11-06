@@ -114,7 +114,6 @@ const page = () => {
     return <Error errors={[AssetsError, AssetCategoriesNamesError]} />;
   }
 
-
   // Handle Delete Asset
   const refetchAll = () => {
     AssetsRefetch();
