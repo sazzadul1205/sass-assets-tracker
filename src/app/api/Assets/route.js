@@ -8,7 +8,7 @@ export const POST = async (request) => {
     // Parse incoming data
     const newAsset = await request.json();
 
-    // Validate required fields (example: asset_name, category_id)
+    // Basic validation
     if (!newAsset.asset_name || !newAsset.category_id) {
       return NextResponse.json(
         {
@@ -19,7 +19,7 @@ export const POST = async (request) => {
       );
     }
 
-    // Add timestamps if not provided
+    // Optional: Add timestamps if not provided
     const timestamp = new Date();
     newAsset.createdAt = newAsset.createdAt || timestamp;
     newAsset.updatedAt = newAsset.updatedAt || timestamp;
@@ -31,10 +31,10 @@ export const POST = async (request) => {
     // Insert asset
     const result = await assetCollection.insertOne(newAsset);
 
-    if (!result.acknowledged) {
-      throw new Error("Insert operation failed");
-    }
+    // Check if insertion was successful
+    if (!result.acknowledged) throw new Error("Insert operation failed");
 
+    // Respond with inserted asset ID
     return NextResponse.json(
       {
         success: true,
@@ -44,8 +44,8 @@ export const POST = async (request) => {
       { status: 201 }
     );
   } catch (error) {
+    // Handle errors
     console.error("Error adding asset:", error);
-
     return NextResponse.json(
       {
         success: false,
@@ -58,27 +58,58 @@ export const POST = async (request) => {
   }
 };
 
-// GET Method - Fetch all assets
-export const GET = async () => {
+// GET Method - Fetch assets with pagination & filters
+export const GET = async (request) => {
   try {
+    // Connect to database
     const db = await connectDB();
     const assetCollection = db.collection("Assets");
 
+    // Parse query parameters
+    const {
+      search,
+      category,
+      department,
+      assignedUser,
+      page = 1,
+      limit = 10,
+    } = Object.fromEntries(new URL(request.url).searchParams.entries());
+
+    // Build filters
+    const filters = {};
+
+    // Add filters based on query parameters
+    if (search) filters.asset_name = { $regex: search, $options: "i" };
+    if (category) filters.category_id = category;
+    if (department) filters.department = department;
+    if (assignedUser) filters.assigned_to = assignedUser;
+
+    // Fetch assets
+    const total = await assetCollection.countDocuments(filters);
+
+    // Fetch assets
     const assets = await assetCollection
-      .find({})
-      .sort({ createdAt: -1 }) // newest first
+      .find(filters)
+      .sort({ createdAt: -1 })
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit))
       .toArray();
 
+    // Ensure it always returns an array
     return NextResponse.json(
       {
         success: true,
         data: assets,
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit)),
       },
       { status: 200 }
     );
   } catch (error) {
+    // Handle errors
     console.error("Error fetching assets:", error);
-
     return NextResponse.json(
       {
         success: false,
