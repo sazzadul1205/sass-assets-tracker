@@ -30,6 +30,7 @@ import CategoryToIcon from "@/Shared/Manager/AllAssets/CategoryToIcon/CategoryTo
 import ViewAssetModal from "@/Shared/Manager/AllAssets/ViewAssetModal/ViewAssetModal";
 import AssignAssetModal from "@/Shared/Manager/AssignAsset/AssignAssetModal/AssignAssetModal";
 import EmailToUserInfo from "@/Shared/Manager/AssignAsset/EmailToUserInfo/EmailToUserInfo";
+import IdToDepartment from "@/Shared/Manager/AssignAsset/IdToDepartment/IdToDepartment";
 
 
 const page = () => {
@@ -80,6 +81,32 @@ const page = () => {
     keepPreviousData: true,
   });
 
+  // Fetch Assets Department
+  const {
+    data: AssetsDepartmentData,
+    error: AssetsDepartmentError,
+    refetch: AssetsDepartmentRefetch,
+    isLoading: AssetsDepartmentIsLoading,
+  } = useQuery({
+    queryKey: ["AssetsDepartmentData"],
+    queryFn: () =>
+      axiosPublic.get(`/Assets/Departments`).then((res) => res.data.data),
+    keepPreviousData: true,
+  });
+
+  // Fetch Assets AssignedTo
+  const {
+    data: AssetsAssignedToData,
+    error: AssetsAssignedToError,
+    refetch: AssetsAssignedToRefetch,
+    isLoading: AssetsAssignedToIsLoading,
+  } = useQuery({
+    queryKey: ["AssetsAssignedToData"],
+    queryFn: () =>
+      axiosPublic.get(`/Assets/AssignedTo`).then((res) => res.data.data),
+    keepPreviousData: true,
+  });
+
   // Handle category fetched from CategoryToIcon
   const handleCategoryFetched = (cat) => {
     setCategoriesArray((prev) =>
@@ -87,30 +114,54 @@ const page = () => {
     );
   };
 
+  // Merge Assets & Departments
+  const mergedDepartmentData = AssetsDepartmentData?.map(assetDept => {
+    const department = DepartmentsData?.find(dep => dep._id === assetDept.department_id);
+    return {
+      ...assetDept,
+      department_Name: department ? department.department_Name : null
+    };
+  });
+
+  // Merge Assets & AssignedTo
+  const mergedAssignedData = AssetsAssignedToData?.map(assignment => {
+    // Find the user whose email matches the group
+    const user = UsersData?.find(u => u.email === assignment.group);
+
+    return {
+      ...assignment,
+      name: user ? user.name : assignment.group
+    };
+  });
+
   // Handle Loading
   if (
     UsersError ||
     AssetsIsLoading ||
     status === "loading" ||
-    DepartmentsIsLoading
+    DepartmentsIsLoading ||
+    AssetsDepartmentIsLoading || AssetsAssignedToIsLoading
   ) return <Loading />;
 
   // Handle errors
   if (
     AssetsError ||
     UsersIsLoading ||
-    DepartmentsError
+    DepartmentsError || AssetsDepartmentError || AssetsAssignedToError
   ) {
-
     console.error("AssetsError:", AssetsError);
     console.error("UsersIsLoading:", UsersIsLoading);
     console.error("DepartmentsError:", DepartmentsError);
+    console.error("AssetsDepartmentError:", AssetsDepartmentError);
+    console.error("AssetsAssignedToError:", AssetsAssignedToError);
 
     // Pass all errors to the Error component as an array
     return <Error errors={[
       AssetsError,
       UsersIsLoading,
       DepartmentsError,
+      AssetsDepartmentError,
+      AssetsAssignedToError
     ]} />;
   }
 
@@ -119,8 +170,12 @@ const page = () => {
     UsersRefetch();
     AssetsRefetch();
     DepartmentsRefetch();
-    AssetCategoriesNamesRefetch();
+    AssetsAssignedToRefetch();
+    AssetsDepartmentRefetch();
   }
+
+  console.log("merged Department Data", mergedDepartmentData);
+  console.log("merged Assigned Data", mergedAssignedData);
 
   return (
     <div className="p-5">
@@ -143,7 +198,6 @@ const page = () => {
                 { label: "Asset Name", align: "left" },
                 { label: "Assigned To", align: "left" },
                 { label: "Department", align: "center" },
-                { label: "Condition", align: "left" },
                 { label: "Current Status", align: "center" },
                 { label: "Time", align: "center" },
                 { label: "Actions", align: "center" },
@@ -192,22 +246,25 @@ const page = () => {
                   {/* Assigned To */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
                     {asset?.isPrivate === false ? (
-                      <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-200 text-gray-700 font-semibold text-sm">
+                      <div className="inline-flex items-center gap-1 px-5 py-1 mx-auto rounded-full bg-gray-200 text-gray-700 font-semibold text-sm">
                         Public
                       </div>
                     ) : (
-                      <EmailToUserInfo email={asset?.assigned_to || ""} />
+                      <EmailToUserInfo
+                        email={asset.assigned_to || ""}
+                      />
                     )}
                   </td>
 
                   {/* Department */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
-                    {asset.department || "—"}
-                  </td>
-
-                  {/* Condition*/}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-left cursor-default">
-                    {asset.condition || "—"}
+                    {asset?.department === "Not Assigned" ? (
+                      <div className="text-gray-400 italic">Not Assigned</div>
+                    ) : (
+                      <IdToDepartment
+                        id={asset.department || ""}
+                      />
+                    )}
                   </td>
 
                   {/* Current Status */}
@@ -217,7 +274,48 @@ const page = () => {
 
                   {/* Time */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
-                    {asset?.time || "—"}
+                    {asset?.isLimited ? (
+                      asset?.return_date ? (
+                        (() => {
+                          const now = new Date();
+                          const returnDate = new Date(asset.return_date);
+                          const diffMs = returnDate - now;
+
+                          if (diffMs <= 0) {
+                            return <span className="text-red-500 font-medium">Expired</span>;
+                          }
+
+                          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                          const diffMonths = Math.floor(diffDays / 30);
+                          const diffYears = Math.floor(diffDays / 365);
+
+                          let timeLeft = "";
+                          if (diffYears >= 1) {
+                            timeLeft = `${diffYears} year${diffYears > 1 ? "s" : ""}${diffMonths % 12 > 0 ? `, ${diffMonths % 12} month${diffMonths % 12 > 1 ? "s" : ""}` : ""
+                              } left`;
+                          } else if (diffMonths >= 1) {
+                            timeLeft = `${diffMonths} month${diffMonths > 1 ? "s" : ""} left`;
+                          } else {
+                            timeLeft = `${diffDays} day${diffDays > 1 ? "s" : ""} left`;
+                          }
+
+                          return (
+                            <div className="flex flex-col items-center">
+                              <span className="font-medium text-gray-800">{new Date(asset.return_date).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}</span>
+                              <span className="text-xs text-gray-500">{timeLeft}</span>
+                            </div>
+                          );
+                        })()
+                      ) : (
+                        <span className="text-gray-400 italic">No Return Date</span>
+                      )
+                    ) : (
+                      <span className="text-green-600 font-medium">Indefinite Duration</span>
+                    )}
                   </td>
 
                   {/* Actions */}
