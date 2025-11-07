@@ -212,7 +212,12 @@ const page = () => {
   useEffect(() => {
     setCurrentPage(1); // reset to page 1 on filter/search change
     AssetsRefetch();
-  }, [searchQuery, selectedCategory, selectedDepartment, selectedAssignedUser]);
+  }, [
+    searchQuery,
+    selectedCategory,
+    selectedDepartment,
+    selectedAssignedUser
+  ]);
 
   // Page loading: only for session or essential data
   if (
