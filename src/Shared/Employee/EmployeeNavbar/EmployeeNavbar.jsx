@@ -102,7 +102,10 @@ const EmployeeNavbar = () => {
             </div>
 
             {/* Name */}
-            <h3 className="font-semibold">{UserData?.name || "John Doe"}</h3>
+            <div>
+              <h3 className="font-semibold">{UserData?.name || "John Doe"}</h3>
+              <h3 className="text-sm text-gray-600">{UserData?.email || "Manager@gmail.com"}</h3>
+            </div>
           </>
         )}
       </div>

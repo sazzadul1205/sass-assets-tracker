@@ -74,6 +74,8 @@ export const GET = async (request) => {
       limit = 10,
       department,
       assignedUser,
+      brand,
+      condition,
     } = Object.fromEntries(new URL(request.url).searchParams.entries());
 
     // Build filters
@@ -84,6 +86,8 @@ export const GET = async (request) => {
     if (category) filters.category_id = category;
     if (department) filters.department = department;
     if (assignedUser) filters.assigned_to = assignedUser;
+    if (brand) filters.brand_name = brand;
+    if (condition) filters.condition = condition;
 
     // Handle assignment status filter
     if (status === "assigned") {
@@ -91,7 +95,7 @@ export const GET = async (request) => {
     } else if (status === "unassigned") {
       filters.current_status = { $in: ["Not Assigned", "", null] };
     }
-    // if status === "all", we don’t add any extra filter
+    // if status === "all", no filter added for current_status
 
     // Get total count
     const total = await assetCollection.countDocuments(filters);
