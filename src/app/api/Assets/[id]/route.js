@@ -36,7 +36,7 @@ export const GET = async (req, { params }) => {
 /** PUT: Update asset by ID */
 export const PUT = async (request, { params }) => {
   try {
-    const { id } = params; // NO await here
+    const { id } = params;
 
     if (!ObjectId.isValid(id)) {
       return NextResponse.json(
@@ -56,11 +56,18 @@ export const PUT = async (request, { params }) => {
     const db = await connectDB();
     const assetCollection = db.collection("Assets");
 
-    const updateData = { ...body, updatedAt: new Date() };
+    // Separate $set and $unset
+    const { unsetFields, ...setFields } = body;
+
+    const updateOperators = { $set: { ...setFields, updatedAt: new Date() } };
+
+    if (unsetFields && Object.keys(unsetFields).length > 0) {
+      updateOperators.$unset = unsetFields;
+    }
 
     const result = await assetCollection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: updateData }
+      updateOperators
     );
 
     if (result.matchedCount === 0) {

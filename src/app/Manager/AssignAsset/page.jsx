@@ -2,13 +2,13 @@
 "use client";
 
 // React  
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 // Next Auth
 import { useSession } from "next-auth/react";
 
 // Icons
-import { FaEye, FaInbox, FaUserPlus, FaSearch, FaAngleLeft, FaAngleRight } from 'react-icons/fa';
+import { FaEye, FaInbox, FaUserPlus, FaSearch, FaAngleLeft, FaAngleRight, FaSpinner } from 'react-icons/fa';
 
 // SVGs
 import AssignAsset from "../../../../public/svgs/AssignAsset";
@@ -37,92 +37,161 @@ const page = () => {
   const axiosPublic = useAxiosPublic();
   const { data: session, status } = useSession();
 
+  // Loading States
+  const [loading, setLoading] = useState(false);
+
+
   // Selected Asset State
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [assignmentStatus, setAssignmentStatus] = useState("all");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedAssignedUser, setSelectedAssignedUser] = useState("");
+
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
   // Fetch Users
-  const { data: UsersData, error: UsersError, refetch: UsersRefetch, isLoading: UsersIsLoading } = useQuery({
+  const {
+    data: UsersData,
+    error: UsersError,
+    refetch: UsersRefetch,
+    isLoading: UsersIsLoading
+  } = useQuery({
     queryKey: ["AllUsersData"],
-    queryFn: () => axiosPublic.get(`/Users/AllUsers`).then(res => res.data.data),
+    queryFn: () => axiosPublic.get(`/Users/AllUsers`).
+      then(res => res.data.data),
     keepPreviousData: true,
   });
 
   // Fetch Departments
-  const { data: DepartmentsData, error: DepartmentsError, refetch: DepartmentsRefetch, isLoading: DepartmentsIsLoading } = useQuery({
+  const {
+    data: DepartmentsData,
+    error: DepartmentsError,
+    refetch: DepartmentsRefetch,
+    isLoading: DepartmentsIsLoading
+  } = useQuery({
     queryKey: ["DepartmentsData"],
-    queryFn: () => axiosPublic.get(`/Departments/Roles`).then(res => res.data.data),
+    queryFn: () => axiosPublic.get(`/Departments/Roles`).
+      then(res => res.data.data),
     keepPreviousData: true,
   });
 
   // Fetch Categories
-  const { data: CategoryData, error: CategoryError, refetch: CategoryRefetch, isLoading: CategoryIsLoading } = useQuery({
+  const {
+    data: CategoryData,
+    error: CategoryError,
+    refetch: CategoryRefetch,
+    isLoading: CategoryIsLoading
+  } = useQuery({
     queryKey: ["Category"],
-    queryFn: () => axiosPublic.get(`/AssetCategories`).then(res => res.data.data),
+    queryFn: () => axiosPublic.get(`/AssetCategories`).
+      then(res => res.data.data),
     keepPreviousData: true,
   });
 
   // Fetch Assets with server-side pagination & filters
-  const { data: AssetsData, error: AssetsError, refetch: AssetsRefetch, isLoading: AssetsIsLoading } = useQuery({
-    queryKey: ["AssetsData", currentPage, itemsPerPage, searchQuery, selectedCategory, selectedDepartment, selectedAssignedUser],
+  const {
+    data: AssetsData,
+    error: AssetsError,
+    refetch: AssetsRefetch,
+    isLoading: AssetsIsLoading
+  } = useQuery({
+    queryKey: [
+      "AssetsData",
+      currentPage,
+      searchQuery,
+      itemsPerPage,
+      assignmentStatus,
+      selectedCategory,
+      selectedDepartment,
+      selectedAssignedUser,
+    ],
     queryFn: () =>
-      axiosPublic.get(`/Assets`, {
-        params: {
-          page: currentPage,
-          limit: itemsPerPage,
-          search: searchQuery,
-          category: selectedCategory,
-          department: selectedDepartment,
-          assignedUser: selectedAssignedUser,
-        },
-      }).then(res => res.data),
+      axiosPublic
+        .get(`/Assets`, {
+          params: {
+            page: currentPage,
+            limit: itemsPerPage,
+            search: searchQuery,
+            status: assignmentStatus,
+            category: selectedCategory,
+            department: selectedDepartment,
+            assignedUser: selectedAssignedUser,
+          },
+        })
+        .then((res) => res.data),
     keepPreviousData: true,
   });
 
+
   // Fetch Assets Department
-  const { data: AssetsDepartmentData, error: AssetsDepartmentError, refetch: AssetsDepartmentRefetch, isLoading: AssetsDepartmentIsLoading } = useQuery({
+  const {
+    data: AssetsDepartmentData,
+    error: AssetsDepartmentError,
+    refetch: AssetsDepartmentRefetch,
+    isLoading: AssetsDepartmentIsLoading
+  } = useQuery({
     queryKey: ["AssetsDepartmentData"],
-    queryFn: () => axiosPublic.get(`/Assets/Departments`).then(res => res.data.data),
+    queryFn: () => axiosPublic.get(`/Assets/Departments`).
+      then(res => res.data.data),
     keepPreviousData: true,
   });
 
   // Fetch Assets AssignedTo
-  const { data: AssetsAssignedToData, error: AssetsAssignedToError, refetch: AssetsAssignedToRefetch, isLoading: AssetsAssignedToIsLoading } = useQuery({
+  const {
+    data: AssetsAssignedToData,
+    error: AssetsAssignedToError,
+    refetch: AssetsAssignedToRefetch,
+    isLoading: AssetsAssignedToIsLoading
+  } = useQuery({
     queryKey: ["AssetsAssignedToData"],
-    queryFn: () => axiosPublic.get(`/Assets/AssignedTo`).then(res => res.data.data),
+    queryFn: () => axiosPublic.get(`/Assets/AssignedTo`).
+      then(res => res.data.data),
     keepPreviousData: true,
   });
 
   // Fetch Assets Category
-  const { data: AssetsCategoryData, error: AssetsCategoryError, refetch: AssetsCategoryRefetch, isLoading: AssetsCategoryIsLoading } = useQuery({
+  const {
+    data: AssetsCategoryData,
+    error: AssetsCategoryError,
+    refetch: AssetsCategoryRefetch,
+    isLoading: AssetsCategoryIsLoading
+  } = useQuery({
     queryKey: ["AssetsCategoryData"],
-    queryFn: () => axiosPublic.get(`/Assets/Category`).then(res => res.data.data),
+    queryFn: () => axiosPublic.get(`/Assets/Category`).
+      then(res => res.data.data),
     keepPreviousData: true,
   });
 
   // Merge Assets & Departments
   const mergedDepartmentData = AssetsDepartmentData?.map(assetDept => {
     const department = DepartmentsData?.find(dep => dep._id === assetDept.department_id);
-    return { ...assetDept, department_Name: department ? department.department_Name : null };
+    return {
+      ...assetDept,
+      department_Name: department ? department.department_Name : null
+    };
   });
 
   // Merge Assets & AssignedTo
   const mergedAssignedData = AssetsAssignedToData?.map(assignment => {
     const user = UsersData?.find(u => u.email === assignment.group);
-    return { ...assignment, name: user ? user.name : assignment.group };
+    return {
+      ...assignment,
+      name: user ? user.name : assignment.group
+    };
   });
 
   // Merge Assets & Category
   const mergedCategoryData = AssetsCategoryData?.map(assetCat => {
     const category = CategoryData?.find(cat => cat._id === assetCat.category_id);
-    return { ...assetCat, category_name: category ? category.category_name : null, category_code: category ? category.category_code : null };
+    return {
+      ...assetCat,
+      category_name: category ? category.category_name : null, category_code: category ? category.category_code : null
+    };
   });
 
   // Total pages
@@ -146,12 +215,110 @@ const page = () => {
   }, [searchQuery, selectedCategory, selectedDepartment, selectedAssignedUser]);
 
   // Page loading: only for session or essential data
-  if (status === "loading" || UsersIsLoading || CategoryIsLoading || DepartmentsIsLoading) return <Loading />;
+  if (
+    UsersIsLoading ||
+    CategoryIsLoading ||
+    DepartmentsIsLoading ||
+    status === "loading" ||
+    AssetsCategoryIsLoading ||
+    AssetsDepartmentIsLoading ||
+    AssetsAssignedToIsLoading
+  ) return <Loading />;
 
   // Handle Errors
-  if (UsersError || AssetsError || CategoryError || DepartmentsError || AssetsCategoryError || AssetsDepartmentError || AssetsAssignedToError) {
-    return <Error errors={[UsersError, AssetsError, CategoryError, DepartmentsError, AssetsCategoryError, AssetsDepartmentError, AssetsAssignedToError]} />;
+  if (
+    UsersError ||
+    AssetsError ||
+    CategoryError ||
+    DepartmentsError ||
+    AssetsCategoryError ||
+    AssetsDepartmentError ||
+    AssetsAssignedToError
+  ) {
+    console.error("UsersError:", UsersError);
+    console.error("AssetsError:", AssetsError);
+    console.error("CategoryError:", CategoryError);
+    console.error("DepartmentsError:", DepartmentsError);
+    console.error("AssetsCategoryError:", AssetsCategoryError);
+    console.error("AssetsDepartmentError:", AssetsDepartmentError);
+    console.error("AssetsAssignedToError:", AssetsAssignedToError);
+
+    return <Error
+      errors={[
+        UsersError,
+        AssetsError,
+        CategoryError,
+        DepartmentsError,
+        AssetsCategoryError,
+        AssetsDepartmentError,
+        AssetsAssignedToError]}
+    />;
   }
+
+  // Handle Unassign Asset
+  const handleUnAssignAsset = async (asset) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: `Do you really want to unassign "${asset.asset_name}"?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, Unassign it!",
+      cancelButtonText: "Cancel",
+    }).then(async (result) => {
+      // If confirmed
+      if (result.isConfirmed) {
+        try {
+          setLoading(true);
+          // Unassign API call
+          const response = await axiosPublic.put(`/Assets/${asset._id}`, {
+            department: "Not Assigned",
+            assigned_to: "Not Assigned",
+            current_status: "Not Assigned",
+            assigned_by: "",
+            assigned_at: "",
+            unsetFields: {
+              isLimited: "",
+              isPrivate: "",
+              return_date: "",
+            },
+          });
+
+          // If success
+          if (response.data.success) {
+            Swal.fire({
+              icon: "success",
+              title: "Asset Unassigned!",
+              text: `"${asset.asset_name}" has been successfully unassigned.`,
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Refetch the assets table
+            AssetsRefetch();
+          } else {
+            // If failed
+            Swal.fire({
+              icon: "error",
+              title: "Failed!",
+              text: response.data.message || "Something went wrong while Un Assigning the asset.",
+            });
+          }
+        } catch (error) {
+          // If error
+          console.error("Unassign error:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Error!",
+            text: error?.response?.data?.message || "Server error while Un Assigning asset.",
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    });
+  };
 
   return (
     <div className="p-5">
@@ -218,6 +385,26 @@ const page = () => {
             </option>
           ))}
         </select>
+
+        {/* Assignment Status Toggle */}
+        <div className="flex items-center gap-2 border border-gray-200 rounded-xl p-1 bg-gray-50">
+          {["all", "assigned", "unassigned"].map((status) => (
+            <button
+              key={status}
+              onClick={() => setAssignmentStatus(status)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-all duration-200 ${assignmentStatus === status
+                ? "bg-blue-600 text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-100"
+                }`}
+            >
+              {status === "all"
+                ? "All"
+                : status === "assigned"
+                  ? "Assigned"
+                  : "Unassigned"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Table */}
@@ -256,10 +443,12 @@ const page = () => {
             {AssetsData?.data?.length > 0 ? (
               AssetsData?.data?.map((asset, index) => (
                 <TableContent
-                  key={asset.asset_id || index}
                   asset={asset}
                   index={index}
+                  loading={loading}
+                  key={asset.asset_id || index}
                   setSelectedAsset={setSelectedAsset}
+                  handleUnAssignAsset={handleUnAssignAsset}
                 />
               ))
             ) : (
@@ -336,14 +525,12 @@ const page = () => {
 
 export default page;
 
-
-
 // Table Content
-const TableContent = ({ asset, index, setSelectedAsset }) => {
+const TableContent = ({ asset, loading, index, setSelectedAsset, handleUnAssignAsset }) => {
   return (
     <tr key={asset.asset_id || index} className="border-t border-gray-200 hover:bg-gray-50 transition text-gray-900">
       {/* Category Icon */}
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-left cursor-default">
+      <td className="px-6 py-4 w-10 whitespace-nowrap text-sm text-left cursor-default">
         {asset?.category_id ? <CategoryToIcon category={asset} /> : "—"}
       </td>
 
@@ -356,7 +543,7 @@ const TableContent = ({ asset, index, setSelectedAsset }) => {
       {/* Assigned To */}
       <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
         {asset?.isPrivate === false ? (
-          <div className="inline-flex items-center gap-1 px-5 py-1 mx-auto rounded-full bg-gray-200 text-gray-700 font-semibold text-sm">
+          <div className="inline-flex items-center gap-1 px-10 py-1 mx-auto rounded-lg bg-gray-200 text-gray-700 font-semibold text-sm">
             Public
           </div>
         ) : (
@@ -385,17 +572,33 @@ const TableContent = ({ asset, index, setSelectedAsset }) => {
 
       {/* Actions */}
       <td className="flex justify-center py-4 px-3 gap-3">
-        <button
-          className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 w-32 shadow-md hover:shadow-lg"
-          onClick={() => {
-            setSelectedAsset(asset);
-            document.getElementById("Assign_Asset_Modal").showModal();
-          }}
-        >
-          <FaUserPlus className="text-base" />
-          Assign
-        </button>
+        {/* Assign/Unassign Button */}
+        {asset?.current_status === "Assigned" ? (
+          // Show Unassign button
+          <button
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 
+            transition-all duration-200 w-32 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+            onClick={() => handleUnAssignAsset(asset)}
+            disabled={loading}
+          >
+            {loading ? <FaSpinner className="animate-spin text-base" /> : <FaInbox className="text-base" />}
+            {loading ? "" : "Unassign"}
+          </button>
+        ) : (
+          // Show Assign button
+          <button
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 w-32 shadow-md hover:shadow-lg"
+            onClick={() => {
+              setSelectedAsset(asset);
+              document.getElementById("Assign_Asset_Modal").showModal();
+            }}
+          >
+            <FaUserPlus className="text-base" />
+            Assign
+          </button>
+        )}
 
+        {/* View Button */}
         <button
           className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 w-32 shadow-md hover:shadow-lg"
           onClick={() => {

@@ -67,27 +67,36 @@ export const GET = async (request) => {
 
     // Parse query parameters
     const {
+      status,
       search,
       category,
-      department,
-      assignedUser,
       page = 1,
       limit = 10,
+      department,
+      assignedUser,
     } = Object.fromEntries(new URL(request.url).searchParams.entries());
 
     // Build filters
     const filters = {};
 
-    // Add filters based on query parameters
+    // Apply filters based on query parameters
     if (search) filters.asset_name = { $regex: search, $options: "i" };
     if (category) filters.category_id = category;
     if (department) filters.department = department;
     if (assignedUser) filters.assigned_to = assignedUser;
 
-    // Fetch assets
+    // Handle assignment status filter
+    if (status === "assigned") {
+      filters.current_status = "Assigned";
+    } else if (status === "unassigned") {
+      filters.current_status = { $in: ["Not Assigned", "", null] };
+    }
+    // if status === "all", we don’t add any extra filter
+
+    // Get total count
     const total = await assetCollection.countDocuments(filters);
 
-    // Fetch assets
+    // Fetch assets with pagination
     const assets = await assetCollection
       .find(filters)
       .sort({ createdAt: -1 })
@@ -95,7 +104,7 @@ export const GET = async (request) => {
       .limit(Number(limit))
       .toArray();
 
-    // Ensure it always returns an array
+    // Respond with paginated results
     return NextResponse.json(
       {
         success: true,
@@ -108,7 +117,6 @@ export const GET = async (request) => {
       { status: 200 }
     );
   } catch (error) {
-    // Handle errors
     console.error("Error fetching assets:", error);
     return NextResponse.json(
       {
