@@ -91,7 +91,7 @@ const page = () => {
             router.push("/Admin/Dashboard");
             break;
           default:
-            router.push("/Employee/MyAssets");
+            router.push("/Employee/Dashboard");
         }
       }
     } catch (err) {

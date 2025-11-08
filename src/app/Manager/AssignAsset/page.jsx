@@ -25,21 +25,20 @@ import Error from "@/Shared/Error/Error";
 import Loading from "@/Shared/Loading/Loading";
 import SharedHeader from '@/Shared/SharedHeader/SharedHeader';
 import CategoryToIcon from "@/Shared/Manager/AllAssets/CategoryToIcon/CategoryToIcon";
+import IdToDepartment from "@/Shared/Manager/AssignAsset/IdToDepartment/IdToDepartment";
+import AssetReturnTime from "@/Shared/Manager/AllAssets/AssetReturnTime/AssetReturnTime";
+import EmailToUserInfo from "@/Shared/Manager/AssignAsset/EmailToUserInfo/EmailToUserInfo";
 
 // Modals
 import ViewAssetModal from "@/Shared/Manager/AllAssets/ViewAssetModal/ViewAssetModal";
 import AssignAssetModal from "@/Shared/Manager/AssignAsset/AssignAssetModal/AssignAssetModal";
-import EmailToUserInfo from "@/Shared/Manager/AssignAsset/EmailToUserInfo/EmailToUserInfo";
-import IdToDepartment from "@/Shared/Manager/AssignAsset/IdToDepartment/IdToDepartment";
-import AssetReturnTime from "@/Shared/Manager/AllAssets/AssetReturnTime/AssetReturnTime";
 
 const page = () => {
   const axiosPublic = useAxiosPublic();
   const { data: session, status } = useSession();
 
   // Loading States
-  const [loading, setLoading] = useState(false);
-
+  const [unAssigningId, setUnAssigningId] = useState(null);
 
   // Selected Asset State
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,7 +47,6 @@ const page = () => {
   const [assignmentStatus, setAssignmentStatus] = useState("all");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedAssignedUser, setSelectedAssignedUser] = useState("");
-
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -126,7 +124,6 @@ const page = () => {
         .then((res) => res.data),
     keepPreviousData: true,
   });
-
 
   // Fetch Assets Department
   const {
@@ -262,6 +259,8 @@ const page = () => {
 
   // Handle Unassign Asset
   const handleUnAssignAsset = async (asset) => {
+    if (!asset) return;
+
     Swal.fire({
       title: "Are you sure?",
       text: `Do you really want to unassign "${asset.asset_name}"?`,
@@ -272,17 +271,16 @@ const page = () => {
       confirmButtonText: "Yes, Unassign it!",
       cancelButtonText: "Cancel",
     }).then(async (result) => {
-      // If confirmed
       if (result.isConfirmed) {
         try {
-          setLoading(true);
-          // Unassign API call
+          setUnAssigningId(asset._id);
+
           const response = await axiosPublic.put(`/Assets/${asset._id}`, {
             department: "Not Assigned",
             assigned_to: "Not Assigned",
             current_status: "Not Assigned",
             assigned_by: "",
-            assigned_at: "",
+            assigned_to: "",
             unsetFields: {
               isLimited: "",
               isPrivate: "",
@@ -290,40 +288,38 @@ const page = () => {
             },
           });
 
-          // If success
           if (response.data.success) {
             Swal.fire({
               icon: "success",
               title: "Asset Unassigned!",
               text: `"${asset.asset_name}" has been successfully unassigned.`,
+              toast: true,
               timer: 2000,
               showConfirmButton: false,
+              position: "top-end",
             });
-
-            // Refetch the assets table
-            AssetsRefetch();
+            refetchAll();
           } else {
-            // If failed
             Swal.fire({
               icon: "error",
               title: "Failed!",
-              text: response.data.message || "Something went wrong while Un Assigning the asset.",
+              text: response.data.message || "Something went wrong while unassigning the asset.",
             });
           }
         } catch (error) {
-          // If error
           console.error("Unassign error:", error);
           Swal.fire({
             icon: "error",
             title: "Error!",
-            text: error?.response?.data?.message || "Server error while Un Assigning asset.",
+            text: error?.response?.data?.message || "Server error while unassigning asset.",
           });
         } finally {
-          setLoading(false);
+          setUnAssigningId(null);
         }
       }
     });
   };
+
 
   return (
     <div className="p-5">
@@ -450,7 +446,7 @@ const page = () => {
                 <TableContent
                   asset={asset}
                   index={index}
-                  loading={loading}
+                  unAssigningId={unAssigningId}
                   key={asset.asset_id || index}
                   setSelectedAsset={setSelectedAsset}
                   handleUnAssignAsset={handleUnAssignAsset}
@@ -531,7 +527,7 @@ const page = () => {
 export default page;
 
 // Table Content
-const TableContent = ({ asset, loading, index, setSelectedAsset, handleUnAssignAsset }) => {
+const TableContent = ({ asset, unAssigningId, index, setSelectedAsset, handleUnAssignAsset }) => {
   return (
     <tr key={asset.asset_id || index} className="border-t border-gray-200 hover:bg-gray-50 transition text-gray-900">
       {/* Category Icon */}
@@ -581,14 +577,21 @@ const TableContent = ({ asset, loading, index, setSelectedAsset, handleUnAssignA
         {asset?.current_status === "Assigned" ? (
           // Show Unassign button
           <button
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 
-            transition-all duration-200 w-32 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm 
+            bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all
+             duration-200 w-32 shadow-md hover:shadow-lg disabled:opacity-60 
+             disabled:cursor-not-allowed"
             onClick={() => handleUnAssignAsset(asset)}
-            disabled={loading}
+            disabled={unAssigningId === asset._id}
           >
-            {loading ? <FaSpinner className="animate-spin text-base" /> : <FaInbox className="text-base" />}
-            {loading ? "" : "Unassign"}
+            {unAssigningId === asset._id ? (
+              <FaSpinner className="animate-spin text-base" />
+            ) : (
+              <FaInbox className="text-base" />
+            )}
+            {unAssigningId === asset._id ? "" : "Unassign"}
           </button>
+
         ) : (
           // Show Assign button
           <button

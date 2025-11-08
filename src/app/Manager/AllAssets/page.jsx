@@ -25,8 +25,8 @@ import CategoryToIcon from "@/Shared/Manager/AllAssets/CategoryToIcon/CategoryTo
 
 // Modals
 import EditAssetModal from "@/Shared/Manager/AllAssets/EditAssetModal/EditAssetModal";
-import CreatedAssetModal from "@/Shared/Manager/AllAssets/CreatedAssetModal/CreatedAssetModal";
 import ViewAssetModal from "@/Shared/Manager/AllAssets/ViewAssetModal/ViewAssetModal";
+import CreatedAssetModal from "@/Shared/Manager/AllAssets/CreatedAssetModal/CreatedAssetModal";
 
 const page = () => {
   const axiosPublic = useAxiosPublic();
@@ -245,18 +245,19 @@ const page = () => {
           timer: 2000,
         });
       } else {
-        throw new Error(response.data?.message || "Failed to delete Assets.");
+        // If failed
+        Swal.fire({
+          icon: "error",
+          title: "Failed!",
+          text: response.data.message || "Something went wrong while Un Deleting the Assets.",
+        });
       }
     } catch (err) {
       console.error(err);
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: err?.message || "Something went wrong while deleting the Assets.",
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 3000,
+        title: "Error!",
+        text: error?.response?.data?.message || "Server error while Un Deleting asset.",
       });
     } finally {
       setDeletingAssetsId(null); // Stop loading
