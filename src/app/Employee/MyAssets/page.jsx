@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react';
 
 
 // Icons
-import { FaWallet } from 'react-icons/fa';
+import { FaEye, FaUserPlus, FaWallet } from 'react-icons/fa';
 import { FaBoxOpen } from 'react-icons/fa';
 
 // Packages
@@ -22,18 +22,11 @@ import useAxiosPublic from '@/Hooks/useAxiosPublic';
 // Shared
 import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
-import TableItem from '@/Shared/Employee/MyAssets/TableItems/TableItems';
-
 
 // Modal
 import ViewRequestModal from '@/Shared/Employee/MyAssets/ViewRequestModal/ViewRequestModal';
-
-
-// Options
-const priorities = ["Low", "Medium", "High", "Urgent"];
-const statuses = ["Pending", "Completed", "Rejected", "Canceled", "Accepted", "Working On"];
-const mainCategories = ["Laptop", "Desktop", "Smartphone", "Tablet", "Printer", "Scanner", "Camera", "Monitor", "Keyboard", "Mouse"];
-const categories = ["Laptop", "Desktop", "Smartphone", "Tablet", "Printer", "Scanner", "Camera", "Monitor", "Keyboard", "Mouse", "Other"];
+import CategoryToIcon from '@/Shared/Manager/AllAssets/CategoryToIcon/CategoryToIcon';
+import ViewAssetModal from '@/Shared/Manager/AllAssets/ViewAssetModal/ViewAssetModal';
 
 const Page = () => {
   const axiosPublic = useAxiosPublic();
@@ -41,13 +34,6 @@ const Page = () => {
 
   // Select State
   const [selectedAsset, setSelectedAsset] = useState(null);
-
-  // Filters state
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const [searchAssetName, setSearchAssetName] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedPriority, setSelectedPriority] = useState("");
-  const [searchRequestedBy, setSearchRequestedBy] = useState("");
 
   // Fetch Users Data
   const {
@@ -62,20 +48,6 @@ const Page = () => {
         .then((res) => res.data.user),
     enabled: !!session?.user?.email,
 
-  });
-
-  // Fetch requests
-  const {
-    data: RequestsData,
-    error: RequestsError,
-    isLoading: RequestsIsLoading
-  } = useQuery({
-    queryKey: ["RequestsData", session?.user?.email],
-    queryFn: () =>
-      axiosPublic.get(`/Requests/Created_by/${session?.user?.email}`)
-        .then(res => res.data.requests),
-    enabled: !!session?.user?.email,
-    keepPreviousData: true,
   });
 
   // Fetch users assets
@@ -108,9 +80,20 @@ const Page = () => {
     enabled: !!UsersData?.department_id,
   });
 
+  // Merge the two arrays safely
+  const unifiedAssets = [
+    ...(UsersAssetsData || []),
+    ...(DepartmentPublicData || []),
+  ];
+
+  // Optional: remove duplicates by _id
+  const uniqueAssets = Array.from(
+    new Map(unifiedAssets.map(item => [item._id, item])).values()
+  );
+
+
   // Loading state
   if (
-    RequestsIsLoading ||
     status === "loading" ||
     UsersAssetsIsLoading ||
     DepartmentPublicIsLoading
@@ -119,13 +102,11 @@ const Page = () => {
   // Error state
   if (
     UsersError ||
-    RequestsError ||
     UsersIsLoading ||
     UsersAssetsError ||
     DepartmentPublicError
   ) {
     console.error("UsersError:", UsersError);
-    console.error("RequestsError:", RequestsError);
     console.error("UsersIsLoading:", UsersIsLoading);
     console.error("UsersAssetsError:", UsersAssetsError);
     console.error("DepartmentPublicError:", DepartmentPublicError);
@@ -133,40 +114,11 @@ const Page = () => {
     // Pass all errors to the Error component as an array
     return <Error errors={[
       UsersError,
-      RequestsError,
       UsersIsLoading,
       UsersAssetsError,
       DepartmentPublicError,
     ]} />;
   }
-
-  // Apply filters
-  const filteredData = RequestsData?.filter(asset => {
-    // Matches Requester Name
-    const matchesRequestedBy = asset.requester_name.toLowerCase().includes(searchRequestedBy.toLowerCase());
-
-    // Matches Asset Name
-    const matchesAssetName = asset.asset_name.toLowerCase().includes(searchAssetName.toLowerCase());
-
-    // Matches Category
-    const matchesCategory = selectedCategory
-      ? selectedCategory === "Other"
-        ? !mainCategories.includes(asset.asset_category)
-        : asset.asset_category === selectedCategory
-      : true;
-
-    // Matches Priority
-    const matchesPriority = selectedPriority ? asset.priority === selectedPriority : true;
-
-    // Matches Status
-    const matchesStatus = selectedStatus ? asset.status === selectedStatus : true;
-
-    // Apply all filters
-    return matchesRequestedBy && matchesAssetName && matchesCategory && matchesPriority && matchesStatus;
-  });
-
-  console.log(UsersData?.department_id);
-
 
   return (
     <div className="p-5">
@@ -186,101 +138,42 @@ const Page = () => {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-5 gap-3 py-4 px-5 border border-gray-200 text-black bg-white">
-
-        {/* Requested By Filter */}
-        <div className="flex flex-col">
-          <label className="text-xs font-medium mb-2">Requested By</label>
-          <input
-            type="text"
-            placeholder="Search Requested By"
-            value={searchRequestedBy}
-            onChange={e => setSearchRequestedBy(e.target.value)}
-            className="border rounded px-3 py-2 text-sm"
-          />
-        </div>
-
-        {/* Asset Name Filter */}
-        <div className="flex flex-col">
-          <label className="text-xs font-medium mb-2">Asset Name</label>
-          <input
-            type="text"
-            placeholder="Search Asset Name"
-            value={searchAssetName}
-            onChange={e => setSearchAssetName(e.target.value)}
-            className="border rounded px-3 py-2 text-sm"
-          />
-        </div>
-
-        {/* Category Dropdown Filter */}
-        <div className="flex flex-col">
-          <label className="text-xs font-medium mb-2">Category</label>
-          <select
-            value={selectedCategory}
-            onChange={e => setSelectedCategory(e.target.value)}
-            className="border rounded px-3 py-2 text-sm"
-          >
-            <option value="">All Categories</option>
-            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-          </select>
-        </div>
-
-        {/* Priority Dropdown Filter */}
-        <div className="flex flex-col">
-          <label className="text-xs font-medium mb-2">Priority</label>
-          <select
-            value={selectedPriority}
-            onChange={e => setSelectedPriority(e.target.value)}
-            className="border rounded px-3 py-2 text-sm"
-          >
-            <option value="">All Priorities</option>
-            {priorities.map(p => <option key={p} value={p}>{p}</option>)}
-          </select>
-        </div>
-
-        {/* Status Dropdown Filter */}
-        <div className="flex flex-col">
-          <label className="text-xs font-medium mb-2">Status</label>
-          <select
-            value={selectedStatus}
-            onChange={e => setSelectedStatus(e.target.value)}
-            className="border rounded px-3 py-2 text-sm"
-          >
-            <option value="">All Status</option>
-            {statuses.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-      </div>
-
-
       {/* Assets Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200 rounded-lg">
           {/* Table Header */}
           <thead className="bg-gray-100">
             <tr>
-              <th className="text-center px-4 py-3 text-sm font-medium text-gray-600">#</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Requested By</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Asset Name</th>
-              <th className="text-center px-4 py-3 text-sm font-medium text-gray-600">status</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Asset ID</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Category</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Condition</th>
-              <th className="text-left px-4 py-3 text-sm font-medium text-gray-600">Priority</th>
-              <th className="px-4 py-3 text-sm font-medium text-gray-600">Status</th>
+              {[
+                { label: "Category", align: "left" },
+                { label: "Asset Name", align: "left" },
+                { label: "Brand", align: "left" },
+                { label: "Condition", align: "left" },
+                { label: "Warranty Period", align: "center" },
+                { label: "Private / Public", align: "center" },
+                { label: "Actions", align: "center" },
+              ].map((col, idx) => (
+                <th
+                  key={idx}
+                  className={`px-6 py-3 text-xs font-medium text-gray-500 uppercase ${col.align === "left" ? "text-left" : col.align === "center" ? "text-center" : "text-right"}`}
+                >
+                  {col.label}
+                </th>
+              ))}
             </tr>
           </thead>
 
           {/* Table Body */}
           <tbody>
-            {filteredData && filteredData.length > 0 ? (
-              filteredData.map(asset =>
-                <TableItem
-                  key={asset._id}
+            {uniqueAssets && uniqueAssets.length > 0 ? (
+              uniqueAssets.map((asset, index) => (
+                <TableContent
                   asset={asset}
+                  index={index}
+                  key={asset.asset_id || index}
                   setSelectedAsset={setSelectedAsset}
-                />)
+                />
+              ))
             ) : (
               <tr>
                 <td colSpan={9} className="px-4 py-10 text-center">
@@ -311,8 +204,106 @@ const Page = () => {
           <button>close</button>
         </form>
       </dialog>
+
+      {/* View Asset Modal */}
+      <dialog id="View_Asset_Modal" className="modal">
+        <ViewAssetModal
+          selectedAsset={selectedAsset}
+          setSelectedAsset={setSelectedAsset}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
     </div>
   );
 };
 
 export default Page;
+
+const TableContent = ({ asset, setSelectedAsset }) => {
+  return (
+    <tr
+      key={asset._id || index}
+      className="border-t border-gray-200 hover:bg-gray-50 transition text-gray-900"
+    >
+      {/* Category Icon */}
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-left cursor-default">
+        {asset?.category_id ? (
+          <CategoryToIcon
+            category={asset}
+          />
+        ) : (
+          "—"
+        )}
+      </td>
+
+      {/* Asset Name */}
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-left cursor-default">
+        {asset.asset_name || "—"}
+        <p className="text-xs text-gray-500" >{asset?.serial_number || "—"}</p>
+      </td>
+
+      {/* Brand Name */}
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-left cursor-default">
+        {asset.brand_name || "—"}
+      </td>
+
+      {/* Condition */}
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
+        {asset.condition || "—"}
+      </td>
+
+      {/* Warranty Period */}
+      <td className=" px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
+        {asset.warranty_period || "—"} Month's
+        <p className="text-xs text-gray-500" >
+          (   {new Date(asset.warranty_expiry_date).toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })})
+        </p>
+      </td>
+
+      {/* Private / Public */}
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
+        {asset?.isPrivate === false ? (
+          <div className="inline-flex items-center gap-1 px-4 py-1 mx-auto rounded-lg bg-green-100 text-green-800 font-semibold text-sm">
+            Public
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-1 px-4 py-1 mx-auto rounded-lg bg-blue-100 text-blue-800 font-semibold text-sm">
+            Private
+          </div>
+        )}
+      </td>
+
+      {/* Actions */}
+      <td className="flex justify-center py-4 px-1 gap-3">
+        {/* Return / Repair Button */}
+        <button
+          className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap min-w-[8rem]" onClick={() => {
+            setSelectedAsset(asset);
+            document.getElementById("Assign_Asset_Modal").showModal();
+          }}
+        >
+          <FaUserPlus className="text-base" />
+          Return / Repair
+        </button>
+
+        {/* View Button */}
+        <button
+          className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 w-32 shadow-md hover:shadow-lg"
+          onClick={() => {
+            setSelectedAsset(asset);
+            document.getElementById("View_Asset_Modal").showModal();
+          }}
+        >
+          <FaEye className="text-base" />
+          View
+        </button>
+      </td>
+    </tr>
+  )
+}

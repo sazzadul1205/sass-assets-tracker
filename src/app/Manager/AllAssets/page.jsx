@@ -502,12 +502,12 @@ const TableContent = ({ asset, index, deletingAssetsId, setSelectedAsset, handle
         {asset.condition || "—"}
       </td>
 
-      {/* Department */}
+      {/* Purchase Price */}
       <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
         {asset.purchase_price || "—"}
       </td>
 
-      {/* Assigned To */}
+      {/* Warranty Period */}
       <td className=" px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
         {asset.warranty_period || "—"} Month's
         <p className="text-xs text-gray-500" >

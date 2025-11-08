@@ -1,19 +1,43 @@
-
-// Icon
+// src/Shared/Employee/MyAssets/ViewAssetModal/ViewAssetModal.jsx
 import {
-  FiCalendar, FiDollarSign, FiUser, FiTag, FiBox, FiInfo, FiCoffee, FiClock, FiCheckCircle, FiXCircle, FiClipboard
+  FiCalendar,
+  FiDollarSign,
+  FiUser,
+  FiTag,
+  FiBox,
+  FiInfo,
+  FiCoffee,
+  FiClock,
+  FiCheckCircle,
+  FiXCircle,
+  FiClipboard,
 } from "react-icons/fi";
 import { ImCross } from "react-icons/im";
-
-// Shared
 import CategoryToIcon from "../CategoryToIcon/CategoryToIcon";
 
-const ViewAssetModal = ({ selectedAsset, setSelectedAsset }) => {
+// Map fields to icons, labels, and optional color
+const assetFields = [
+  { key: "asset_code", label: "Asset Code", icon: FiTag },
+  { key: "brand_name", label: "Brand", icon: FiBox },
+  { key: "serial_number", label: "Serial Number", icon: FiClipboard },
+  { key: "purchase_date", label: "Purchase Date", icon: FiCalendar, formatDate: true },
+  { key: "purchase_price", label: "Purchase Price", icon: FiDollarSign, prefix: "৳" },
+  { key: "supplier_name", label: "Supplier", icon: FiCoffee },
+  { key: "warranty_period", label: "Warranty Period", icon: FiClock, suffix: "months" },
+  { key: "warranty_expiry_date", label: "Warranty Expiry", icon: FiCalendar, formatDate: true },
+  { key: "depreciation_rate", label: "Depreciation Rate", icon: FiXCircle, suffix: "%" },
+  { key: "condition", label: "Condition", icon: FiCheckCircle },
+  { key: "department_name", label: "Department", icon: FiUser },
+  { key: "assigned_to", label: "Assigned To", icon: FiUser },
+  { key: "current_status", label: "Current Status", icon: FiInfo },
+  { key: "createdBy", label: "Created By", icon: FiUser },
+  { key: "createdAt", label: "Created At", icon: FiCalendar, formatDate: true },
+  { key: "updatedAt", label: "Last Updated", icon: FiCalendar, formatDate: true },
+];
 
-  // If no asset is selected, do not render the modal
+const ViewAssetModal = ({ selectedAsset, setSelectedAsset }) => {
   if (!selectedAsset) return null;
 
-  // Close modal handler
   const handleClose = () => {
     setSelectedAsset(null);
     document.getElementById("View_Asset_Modal")?.close();
@@ -27,7 +51,16 @@ const ViewAssetModal = ({ selectedAsset, setSelectedAsset }) => {
     >
       {/* Header */}
       <div className="flex justify-between items-center border-b border-gray-200 pb-3 mb-4">
-        <h2 className="text-2xl font-semibold">{selectedAsset.asset_name}</h2>
+        <div className="font-semibold flex items-center gap-2">
+          {selectedAsset.category_id && <CategoryToIcon category={selectedAsset} />}
+          <div>
+            <h3>
+              {selectedAsset.asset_name}
+            </h3>
+            <p className="text-sm text-gray-600">{selectedAsset.serial_number}</p>
+          </div>
+        </div>
+
         <button
           type="button"
           onClick={handleClose}
@@ -35,24 +68,6 @@ const ViewAssetModal = ({ selectedAsset, setSelectedAsset }) => {
         >
           <ImCross className="text-xl" />
         </button>
-      </div>
-
-      {/* Top Info */}
-      <div className="flex items-center gap-4 mb-6">
-        {selectedAsset.category_id && (
-          <CategoryToIcon category={selectedAsset} />
-        )}
-        <div className="space-y-1">
-          <p className="text-gray-500 text-sm flex items-center gap-1">
-            <FiTag /> Asset Code: <span className="font-medium">{selectedAsset.asset_code}</span>
-          </p>
-          <p className="text-gray-500 text-sm flex items-center gap-1">
-            <FiBox /> Brand: <span className="font-medium">{selectedAsset.brand_name}</span>
-          </p>
-          <p className="text-gray-500 text-sm flex items-center gap-1">
-            <FiClipboard /> Serial Number: <span className="font-medium">{selectedAsset.serial_number}</span>
-          </p>
-        </div>
       </div>
 
       {/* Description */}
@@ -67,132 +82,42 @@ const ViewAssetModal = ({ selectedAsset, setSelectedAsset }) => {
 
       {/* Details Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <FiCalendar className="text-gray-500" />
-          <div>
-            <h4 className="font-medium text-gray-600 text-sm">Purchase Date</h4>
-            <p className="text-gray-800">
-              {new Date(selectedAsset.purchase_date).toLocaleString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })}
-            </p>
-          </div>
+        {assetFields.map(({ key, label, icon: Icon, formatDate, prefix = "", suffix = "" }) => {
+          const value = selectedAsset[key];
+          if (!value) return null;
 
-        </div>
+          let displayValue = value;
+          if (formatDate) {
+            displayValue = new Date(value).toLocaleString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            });
+          }
 
-        <div className="flex items-center gap-2">
-          <FiDollarSign className="text-gray-500" />
-          <div>
-            <h4 className="font-medium text-gray-600 text-sm">Purchase Price</h4>
-            <p className="text-gray-800">৳ {selectedAsset.purchase_price}</p>
-          </div>
-        </div>
+          return (
+            <div key={key} className="flex items-center gap-2">
+              <Icon className="text-gray-500" />
+              <div>
+                <h4 className="font-medium text-gray-600 text-sm">{label}</h4>
+                <p className="text-gray-800">{prefix}{displayValue}{suffix}</p>
+              </div>
+            </div>
+          );
+        })}
 
-        <div className="flex items-center gap-2">
-          <FiCoffee className="text-gray-500" />
-          <div>
-            <h4 className="font-medium text-gray-600 text-sm">Supplier</h4>
-            <p className="text-gray-800">{selectedAsset.supplier_name}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <FiClock className="text-gray-500" />
-          <div>
-            <h4 className="font-medium text-gray-600 text-sm">Warranty Period</h4>
-            <p className="text-gray-800">{selectedAsset.warranty_period} months</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <FiCalendar className="text-gray-500" />
-          <div>
-            <h4 className="font-medium text-gray-600 text-sm">Warranty Expiry</h4>
-            <p className="text-gray-800">
-              {new Date(selectedAsset.warranty_expiry_date).toLocaleString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })}
-            </p>
-          </div>
-
-        </div>
-
-        <div className="flex items-center gap-2">
-          <FiXCircle className="text-gray-500" />
-          <div>
-            <h4 className="font-medium text-gray-600 text-sm">Depreciation Rate</h4>
-            <p className="text-gray-800">{selectedAsset.depreciation_rate}%</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <FiCheckCircle className="text-gray-500" />
-          <div>
-            <h4 className="font-medium text-gray-600 text-sm">Condition</h4>
-            <p className="text-gray-800">{selectedAsset.condition}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <FiUser className="text-gray-500" />
-          <div>
-            <h4 className="font-medium text-gray-600 text-sm">Department</h4>
-            <p className="text-gray-800">{selectedAsset.department}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <FiUser className="text-gray-500" />
-          <div>
-            <h4 className="font-medium text-gray-600 text-sm">Assigned To</h4>
-            <p className="text-gray-800">{selectedAsset.assigned_to}</p>
-          </div>
-        </div>
-
+        {/* Private / Public */}
         <div className="flex items-center gap-2">
           <FiInfo className="text-gray-500" />
           <div>
-            <h4 className="font-medium text-gray-600 text-sm">Current Status</h4>
-            <p className="text-gray-800">{selectedAsset.current_status}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <FiUser className="text-gray-500" />
-          <div>
-            <h4 className="font-medium text-gray-600 text-sm">Created By</h4>
-            <p className="text-gray-800">{selectedAsset.createdBy}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <FiCalendar className="text-gray-500" />
-          <div>
-            <h4 className="font-medium text-gray-600 text-sm">Created At</h4>
-            <p className="text-gray-800">
-              {new Date(selectedAsset.createdAt).toLocaleString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <FiCalendar className="text-gray-500" />
-          <div>
-            <h4 className="font-medium text-gray-600 text-sm">Last Updated</h4>
-            <p className="text-gray-800">
-              {new Date(selectedAsset.updatedAt).toLocaleString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })}
+            <h4 className="font-medium text-gray-600 text-sm">Visibility</h4>
+            <p
+              className={`font-semibold px-2 py-1 rounded-lg text-sm inline-block ${selectedAsset.isPrivate
+                ? "bg-blue-100 text-blue-800"
+                : "bg-green-100 text-green-800"
+                }`}
+            >
+              {selectedAsset.isPrivate ? "Private" : "Public"}
             </p>
           </div>
         </div>
