@@ -35,7 +35,7 @@ const statuses = ["Pending", "Completed", "Rejected", "Canceled", "Accepted", "W
 const mainCategories = ["Laptop", "Desktop", "Smartphone", "Tablet", "Printer", "Scanner", "Camera", "Monitor", "Keyboard", "Mouse"];
 const categories = ["Laptop", "Desktop", "Smartphone", "Tablet", "Printer", "Scanner", "Camera", "Monitor", "Keyboard", "Mouse", "Other"];
 
-const MyAssetsPage = () => {
+const Page = () => {
   const axiosPublic = useAxiosPublic();
   const { data: session, status } = useSession();
 
@@ -48,6 +48,21 @@ const MyAssetsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedPriority, setSelectedPriority] = useState("");
   const [searchRequestedBy, setSearchRequestedBy] = useState("");
+
+  // Fetch Users Data
+  const {
+    data: UsersData,
+    error: UsersError,
+    isLoading: UsersIsLoading,
+  } = useQuery({
+    queryKey: ["UserData", session?.user?.email],
+    queryFn: () =>
+      axiosPublic
+        .get(`/Users/${session?.user?.email}`)
+        .then((res) => res.data.user),
+    enabled: !!session?.user?.email,
+
+  });
 
   // Fetch requests
   const {
@@ -63,15 +78,66 @@ const MyAssetsPage = () => {
     keepPreviousData: true,
   });
 
+  // Fetch users assets
+  const {
+    data: UsersAssetsData,
+    error: UsersAssetsError,
+    isLoading: UsersAssetsIsLoading,
+  } = useQuery({
+    queryKey: ["UsersAssetsData", session?.user?.email],
+    queryFn: () =>
+      axiosPublic
+        .get(`/Assets/Email/${session?.user?.email}`)
+        .then((res) => res.data.assets),
+    keepPreviousData: true,
+    enabled: !!session?.user?.email,
+  });
+
+  // Fetch Department Public
+  const {
+    data: DepartmentPublicData,
+    error: DepartmentPublicError,
+    isLoading: DepartmentPublicIsLoading,
+  } = useQuery({
+    queryKey: ["DepartmentPublicData", UsersData?.department_id],
+    queryFn: () =>
+      axiosPublic
+        .get(`/Assets/DepartmentPublic/${UsersData?.department_id}`)
+        .then((res) => res.data.assets),
+    keepPreviousData: true,
+    enabled: !!UsersData?.department_id,
+  });
+
   // Loading state
-  if (RequestsIsLoading || status === "loading") return <Loading />;
+  if (
+    RequestsIsLoading ||
+    status === "loading" ||
+    UsersAssetsIsLoading ||
+    DepartmentPublicIsLoading
+  ) return <Loading />;
 
   // Error state
-  if (RequestsError) {
+  if (
+    UsersError ||
+    RequestsError ||
+    UsersIsLoading ||
+    UsersAssetsError ||
+    DepartmentPublicError
+  ) {
+    console.error("UsersError:", UsersError);
     console.error("RequestsError:", RequestsError);
+    console.error("UsersIsLoading:", UsersIsLoading);
+    console.error("UsersAssetsError:", UsersAssetsError);
+    console.error("DepartmentPublicError:", DepartmentPublicError);
 
     // Pass all errors to the Error component as an array
-    return <Error errors={[RequestsError]} />;
+    return <Error errors={[
+      UsersError,
+      RequestsError,
+      UsersIsLoading,
+      UsersAssetsError,
+      DepartmentPublicError,
+    ]} />;
   }
 
   // Apply filters
@@ -98,6 +164,9 @@ const MyAssetsPage = () => {
     // Apply all filters
     return matchesRequestedBy && matchesAssetName && matchesCategory && matchesPriority && matchesStatus;
   });
+
+  console.log(UsersData?.department_id);
+
 
   return (
     <div className="p-5">
@@ -246,4 +315,4 @@ const MyAssetsPage = () => {
   );
 };
 
-export default MyAssetsPage;
+export default Page;

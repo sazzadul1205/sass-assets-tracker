@@ -1,4 +1,4 @@
-// React components
+// React Components
 import React, { useEffect, useState } from 'react';
 
 // Icons
@@ -16,7 +16,7 @@ import 'react-tooltip/dist/react-tooltip.css';
 // Hooks
 import useAxiosPublic from '@/Hooks/useAxiosPublic';
 
-// Shared
+// Shared Components
 import SharedInput from '@/Shared/SharedInput/SharedInput';
 
 const UpdateEmployeeDataModal = ({
@@ -27,15 +27,15 @@ const UpdateEmployeeDataModal = ({
 }) => {
   const axiosPublic = useAxiosPublic();
 
-  // States
+  // Local states
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Dynamic options
+  // Dynamic dropdown options
   const [departmentOptions, setDepartmentOptions] = useState([]);
   const [positionOptions, setPositionOptions] = useState([]);
 
-  // React Hook Form
+  // React Hook Form setup
   const {
     watch,
     reset,
@@ -56,22 +56,28 @@ const UpdateEmployeeDataModal = ({
     }
   }, [DepartmentsData]);
 
-  // Watch department change and update positions dynamically
+  // When department changes, auto-update department_id and position list
   useEffect(() => {
     if (!DepartmentsData) return;
 
     const dept = DepartmentsData.find(d => d.department_Name === selectedDepartment);
-    const positions = dept ? dept.roles.map(r => r.role) : [];
 
-    setPositionOptions(positions);
+    if (dept) {
+      setPositionOptions(dept.roles.map(r => r.role));
+      setValue('department_id', dept._id); // Store department ID when department is selected
+    } else {
+      setPositionOptions([]);
+      setValue('department_id', ''); // Clear if invalid
+    }
 
-    // Clear position if current value is invalid
-    if (!positions.includes(watch('position_name'))) {
+    // Clear invalid position if it doesn't belong to the new department
+    const currentPosition = watch('position_name');
+    if (dept && !dept.roles.map(r => r.role).includes(currentPosition)) {
       setValue('position_name', '');
     }
   }, [selectedDepartment, DepartmentsData, setValue, watch]);
 
-  // Reset form whenever selectedEmployee changes
+  // Reset form when a new employee is selected
   useEffect(() => {
     if (!selectedEmployee || !DepartmentsData) return;
 
@@ -79,13 +85,14 @@ const UpdateEmployeeDataModal = ({
     const positions = dept ? dept.roles.map(r => r.role) : [];
     setPositionOptions(positions);
 
-    // Reset the form with all fields except position_name
+    // Reset all fields
     reset({
       city: selectedEmployee.city || '',
       address: selectedEmployee.address || '',
       country: selectedEmployee.country || '',
       department_name: selectedEmployee.department_name || '',
-      position_name: '', // temporarily empty
+      department_id: selectedEmployee.department_id || '', // Include department_id
+      position_name: '',
       designation_name: selectedEmployee.designation_name || '',
       organization_name: selectedEmployee.organization_name || '',
       hire_time: selectedEmployee.hire_time
@@ -93,13 +100,13 @@ const UpdateEmployeeDataModal = ({
         : '',
     });
 
-    // Set position_name after options are ready
+    // Restore position if valid
     if (selectedEmployee.position_name && positions.includes(selectedEmployee.position_name)) {
       setValue('position_name', selectedEmployee.position_name);
     }
   }, [selectedEmployee, DepartmentsData, reset, setValue]);
 
-  // Handle close
+  // Close and cleanup modal
   const handleClose = () => {
     reset();
     refetch && refetch();
@@ -108,7 +115,7 @@ const UpdateEmployeeDataModal = ({
     document.getElementById('Update_Employee_Data_Modal').close();
   };
 
-  // Submit
+  // Submit updated employee info
   const onSubmit = async (data) => {
     setError(null);
     setIsLoading(true);
@@ -127,6 +134,7 @@ const UpdateEmployeeDataModal = ({
         address: data.address?.trim() || null,
         position_name: data.position_name?.trim() || null,
         department_name: data.department_name?.trim() || null,
+        department_id: data.department_id || null, // Include department_id in payload
         designation_name: data.designation_name?.trim() || null,
         organization_name: data.organization_name?.trim() || null,
       };
@@ -165,7 +173,7 @@ const UpdateEmployeeDataModal = ({
         <h3 className="font-bold text-xl">Update User Data</h3>
 
         <div className="flex">
-          {/* Paste Button */}
+          {/* Paste from clipboard */}
           <button
             type="button"
             data-tooltip-id="paste-tooltip"
@@ -177,14 +185,20 @@ const UpdateEmployeeDataModal = ({
 
                 const pasteData = JSON.parse(clipboardText);
 
-                // Update department first to populate positions
+                // Update department_name and department_id first
                 if (pasteData.department_name) {
                   setValue('department_name', pasteData.department_name);
                   const dept = DepartmentsData.find(d => d.department_Name === pasteData.department_name);
-                  if (dept) setPositionOptions(dept.roles.map(r => r.role));
-                  else setPositionOptions([]);
+                  if (dept) {
+                    setValue('department_id', dept._id);
+                    setPositionOptions(dept.roles.map(r => r.role));
+                  } else {
+                    setValue('department_id', '');
+                    setPositionOptions([]);
+                  }
                 }
 
+                // Reset all other values
                 reset({
                   city: pasteData.city || '',
                   country: pasteData.country || '',
@@ -192,6 +206,7 @@ const UpdateEmployeeDataModal = ({
                   hire_time: pasteData.hire_time || '',
                   position_name: pasteData.position_name || '',
                   department_name: pasteData.department_name || '',
+                  department_id: pasteData.department_id || '',
                   designation_name: pasteData.designation_name || '',
                   organization_name: pasteData.organization_name || '',
                 });
@@ -212,6 +227,7 @@ const UpdateEmployeeDataModal = ({
           <Tooltip id="paste-tooltip" place="top" effect="solid" />
         </div>
 
+        {/* Close modal */}
         <button
           type="button"
           onClick={handleClose}
@@ -221,15 +237,20 @@ const UpdateEmployeeDataModal = ({
         </button>
       </div>
 
+      {/* Divider */}
       <p className="w-[98%] mx-auto h-[1px] bg-gray-500 my-3" />
 
+      {/* Error Display */}
       {error && (
         <div className="py-3 bg-red-100 border border-red-400 rounded-lg">
           <p className="text-red-500 font-semibold text-center">{error}</p>
         </div>
       )}
 
+      {/* Main Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
+
+        {/* Address */}
         <SharedInput
           label="Address"
           register={register}
@@ -240,7 +261,9 @@ const UpdateEmployeeDataModal = ({
           error={errors.address}
         />
 
+        {/* City & Country */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* City */}
           <SharedInput
             label="City"
             register={register}
@@ -251,6 +274,7 @@ const UpdateEmployeeDataModal = ({
             error={errors.city}
           />
 
+          {/* Country */}
           <SharedInput
             label="Country"
             register={register}
@@ -262,6 +286,7 @@ const UpdateEmployeeDataModal = ({
           />
         </div>
 
+        {/* Organization */}
         <SharedInput
           label="Organization Name"
           register={register}
@@ -272,6 +297,7 @@ const UpdateEmployeeDataModal = ({
           error={errors.organization_name}
         />
 
+        {/* Department */}
         <SharedInput
           label="Department Name"
           register={register}
@@ -284,7 +310,16 @@ const UpdateEmployeeDataModal = ({
           error={errors.department_name}
         />
 
+        {/* Hidden field for department_id */}
+        <input
+          type="hidden"
+          {...register('department_id')}
+          value={watch('department_id') || ''}
+        />
+
+        {/* Position & Designation */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Position Name */}
           <SharedInput
             label="Position Name"
             register={register}
@@ -297,6 +332,7 @@ const UpdateEmployeeDataModal = ({
             error={errors.position_name}
           />
 
+          {/* Designation Name */}
           <SharedInput
             label="Designation Name"
             register={register}
@@ -308,6 +344,7 @@ const UpdateEmployeeDataModal = ({
           />
         </div>
 
+        {/* Hired Date */}
         <SharedInput
           label="Hire Date"
           control={control}
@@ -320,10 +357,13 @@ const UpdateEmployeeDataModal = ({
           dateLimit="past"
         />
 
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={isSubmitting || isLoading}
-          className={`w-full h-11 font-semibold text-white rounded-lg transition-all ${isSubmitting || isLoading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          className={`w-full h-11 font-semibold text-white rounded-lg transition-all ${isSubmitting || isLoading
+            ? 'bg-blue-400 cursor-not-allowed'
+            : 'bg-blue-600 hover:bg-blue-700'
             }`}
         >
           {(isSubmitting || isLoading) ? (
