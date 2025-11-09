@@ -10,11 +10,11 @@ import {
   FaSearch,
   FaArrowUp,
   FaLongArrowAltLeft
-} from "react-icons/fa";
-
+} from "react-icons/fa"
 
 // Shared
 import AssetServiceReturnForm from "./AssetServiceReturnForm/AssetServiceReturnForm";
+import AssetServiceRepairForm from "./AssetServiceRepairForm/AssetServiceRepairForm";
 
 const AssetServiceModal = ({
   Refetch,
@@ -189,7 +189,13 @@ const AssetServiceModal = ({
           )}
 
           {activeRequest === "repair" && (
-            <></>
+            <AssetServiceRepairForm
+              Refetch={Refetch}
+              setError={setError}
+              userData={userData}
+              handleClose={handleClose}
+              selectedAsset={selectedAsset}
+            />
           )}
 
           {activeRequest === "upgrade" && (

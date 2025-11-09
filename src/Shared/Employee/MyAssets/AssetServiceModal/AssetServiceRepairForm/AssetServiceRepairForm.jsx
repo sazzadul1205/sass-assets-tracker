@@ -1,27 +1,28 @@
+"use client";
+
 // React
-import { useState } from "react";
+import React, { useState } from "react";
 
 // Packages
-import Swal from "sweetalert2";
 import { useForm } from "react-hook-form";
+import Swal from "sweetalert2";
+
+// Shared Components
+import SharedInput from "@/Shared/SharedInput/SharedInput";
 
 // Hooks
 import useAxiosPublic from "@/Hooks/useAxiosPublic";
 
-// Shared
-import SharedInput from "@/Shared/SharedInput/SharedInput";
-
 // Shared - Options
-import { assets_condition_replace } from "@/Shared/options/assets_condition";
+import { assets_condition_repair } from "@/Shared/options/assets_condition";
 
-const AssetServiceReturnForm = ({
+const AssetServiceRepairForm = ({
   Refetch,
   setError,
   userData,
   handleClose,
   selectedAsset,
 }) => {
-
   const axiosPublic = useAxiosPublic();
 
   // Form Hook
@@ -42,13 +43,12 @@ const AssetServiceReturnForm = ({
     setIsLoading(true);
 
     try {
-      // Fallback if no assigned user
       const assignedTo = selectedAsset?.assigned_to || "public";
 
-      // Service Request Payload (record request in AssetServices)
+      // Payload for AssetServices collection
       const ServicesPayload = {
         ...data,
-        request: "return",
+        request: "repair",
         Asset: selectedAsset?._id,
         requestedBy: userData?.email || "public",
         assigned_to: assignedTo,
@@ -57,32 +57,31 @@ const AssetServiceReturnForm = ({
         updatedAt: new Date().toISOString(),
       };
 
-      // Asset Update Payload (mark asset as requested for return)
+      // Payload for updating the asset status
       const AssetUpdatePayload = {
         request: {
-          status: "pending_return",
+          status: "pending_repair",
           requested_by: userData?.email || "public",
           requested_at: new Date().toISOString(),
         },
       };
 
-      // Send data to API
+      // Send requests concurrently
       const [ServicesResponse, AssetUpdateResponse] = await Promise.all([
         axiosPublic.post("/AssetServices", ServicesPayload),
         axiosPublic.put(`/Assets/${selectedAsset?._id}`, AssetUpdatePayload),
       ]);
 
-      // Handle success
+      // Check if successful
       if (
-        ServicesResponse?.status === 200 ||
-        ServicesResponse?.status === 201 ||
-        AssetUpdateResponse?.status === 200 ||
-        AssetUpdateResponse?.status === 201
+        [ServicesResponse?.status, AssetUpdateResponse?.status].some(
+          (s) => s === 200 || s === 201
+        )
       ) {
         Swal.fire({
           icon: "success",
-          title: "Return Request Sent",
-          text: "The asset return request has been submitted successfully!",
+          title: "Repair Request Sent",
+          text: "The asset repair request has been submitted successfully!",
           position: "top-start",
           showConfirmButton: false,
           timer: 2000,
@@ -93,29 +92,30 @@ const AssetServiceReturnForm = ({
         Refetch?.();
         handleClose?.();
       } else {
-        throw new Error("Failed to submit return request");
+        throw new Error("Failed to submit repair request");
       }
     } catch (err) {
-      console.error("Return Request Error:", err);
-      setError(err?.message || "Something went wrong while submitting return request");
+      console.error("Repair Request Error:", err);
+      setError(
+        err?.message || "Something went wrong while submitting repair request"
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div >
-      {/* Form */}
+    <div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        {/* Return Date */}
+        {/* Expected Repair Date */}
         <SharedInput
-          name="returnDate"
-          label="Return Date"
+          name="expectedRepairDate"
+          label="Expected Repair Date"
           type="date"
-          dateLimit="future"
           control={control}
-          rules={{ required: "Return date is required" }}
-          error={errors.returnDate}
+          rules={{ required: "Please specify expected repair date" }}
+          dateLimit="future"
+          error={errors.expectedRepairDate}
         />
 
         {/* Asset Condition */}
@@ -125,23 +125,20 @@ const AssetServiceReturnForm = ({
           type="select"
           placeholder="Select condition"
           register={register}
-          options={assets_condition_replace}
+          options={assets_condition_repair}
           rules={{ required: "Please specify the asset condition" }}
           error={errors.condition}
         />
 
-        {/* Issue Description (if any) */}
+        {/* Issue Description */}
         <SharedInput
           name="issueDescription"
           label="Issue Description"
           type="textarea"
-          placeholder="Describe any problems or issues..."
+          placeholder="Describe the issue..."
           register={register}
           rules={{
-            maxLength: {
-              value: 300,
-              message: "Keep it under 300 characters",
-            },
+            maxLength: { value: 300, message: "Keep it under 300 characters" },
           }}
           error={errors.issueDescription}
         />
@@ -156,20 +153,19 @@ const AssetServiceReturnForm = ({
           error={errors.remarks}
         />
 
-        {/* Submit */}
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={isSubmitting || isLoading}
-          className={`w-full h-11 font-semibold text-white rounded-lg transition-all 
-            ${isSubmitting || isLoading
-              ? "bg-blue-400 cursor-not-allowed pointer-events-none"
-              : "bg-blue-600 hover:bg-blue-700"
+          className={`w-full h-11 font-semibold text-white rounded-lg transition-all ${isSubmitting || isLoading
+            ? "bg-blue-400 cursor-not-allowed pointer-events-none"
+            : "bg-blue-600 hover:bg-blue-700"
             }`}
         >
           {isSubmitting || isLoading ? (
             <span className="loading loading-spinner loading-sm"></span>
           ) : (
-            "Send Return Request"
+            "Submit Repair Request"
           )}
         </button>
       </form>
@@ -177,4 +173,4 @@ const AssetServiceReturnForm = ({
   );
 };
 
-export default AssetServiceReturnForm;
+export default AssetServiceRepairForm;
