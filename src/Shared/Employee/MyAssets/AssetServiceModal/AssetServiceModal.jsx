@@ -4,9 +4,24 @@ import React, { useState } from "react";
 // Icons
 import { ImCross } from "react-icons/im";
 import { MdAssignmentReturn } from "react-icons/md";
-import { FaBox, FaTools, FaArrowUp, FaSearch, FaLongArrowAltLeft } from "react-icons/fa";
+import {
+  FaBox,
+  FaTools,
+  FaSearch,
+  FaArrowUp,
+  FaLongArrowAltLeft
+} from "react-icons/fa";
 
-const AssetServiceModal = ({ selectedAsset, setSelectedAsset }) => {
+
+// Shared
+import AssetServiceReturnForm from "./AssetServiceReturnForm/AssetServiceReturnForm";
+
+const AssetServiceModal = ({
+  Refetch,
+  userData,
+  selectedAsset,
+  setSelectedAsset
+}) => {
 
   // Error
   const [error, setError] = useState(null);
@@ -18,7 +33,7 @@ const AssetServiceModal = ({ selectedAsset, setSelectedAsset }) => {
   const handleClose = () => {
     setSelectedAsset(null);
     setActiveRequest(null);
-    document.getElementById("Asset_Return_Or_Repair_Modal").close();
+    document.getElementById("Asset_Services_Modal").close();
   };
 
   // Handle request type
@@ -27,7 +42,7 @@ const AssetServiceModal = ({ selectedAsset, setSelectedAsset }) => {
 
   return (
     <div
-      id="Asset_Return_Or_Repair_Modal"
+      id="Asset_Services_Modal"
       className="modal-box min-w-3xl max-w-3xl relative bg-white rounded-lg shadow-xl hover:shadow-2xl w-full mx-auto max-h-[90vh] px-6 py-5 text-black overflow-y-auto"
     >
       {/* Header */}
@@ -164,7 +179,13 @@ const AssetServiceModal = ({ selectedAsset, setSelectedAsset }) => {
           </div>
 
           {activeRequest === "return" && (
-            <AssetReturnForm selectedAsset={selectedAsset} />
+            <AssetServiceReturnForm
+              Refetch={Refetch}
+              setError={setError}
+              userData={userData}
+              handleClose={handleClose}
+              selectedAsset={selectedAsset}
+            />
           )}
 
           {activeRequest === "repair" && (

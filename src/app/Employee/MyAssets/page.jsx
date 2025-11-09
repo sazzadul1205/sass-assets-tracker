@@ -41,6 +41,7 @@ const Page = () => {
   const {
     data: UsersData,
     error: UsersError,
+    refetch: UsersRefetch,
     isLoading: UsersIsLoading,
   } = useQuery({
     queryKey: ["UserData", session?.user?.email],
@@ -55,6 +56,7 @@ const Page = () => {
   const {
     data: UsersAssetsData,
     error: UsersAssetsError,
+    refetch: UsersAssetsRefetch,
     isLoading: UsersAssetsIsLoading,
   } = useQuery({
     queryKey: ["UsersAssetsData", session?.user?.email],
@@ -70,6 +72,7 @@ const Page = () => {
   const {
     data: DepartmentPublicData,
     error: DepartmentPublicError,
+    refetch: DepartmentPublicRefetch,
     isLoading: DepartmentPublicIsLoading,
   } = useQuery({
     queryKey: ["DepartmentPublicData", UsersData?.department_id],
@@ -119,6 +122,13 @@ const Page = () => {
       DepartmentPublicError,
     ]} />;
   }
+
+  // Refetch
+  const Refetch = () => {
+    UsersRefetch();
+    UsersAssetsRefetch();
+    DepartmentPublicRefetch();
+  };
 
   return (
     <div className="p-5">
@@ -218,8 +228,10 @@ const Page = () => {
       </dialog>
 
       {/* View Asset Modal */}
-      <dialog id="Asset_Return_Or_Repair_Modal" className="modal">
+      <dialog id="Asset_Services_Modal" className="modal">
         <AssetServiceModal
+          Refetch={Refetch}
+          userData={UsersData}
           selectedAsset={selectedAsset}
           setSelectedAsset={setSelectedAsset}
         />
@@ -302,7 +314,7 @@ const TableContent = ({ asset, setSelectedAsset }) => {
         <button
           className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap min-w-[8rem]" onClick={() => {
             setSelectedAsset(asset);
-            document.getElementById("Asset_Return_Or_Repair_Modal").showModal();
+            document.getElementById("Asset_Services_Modal").showModal();
           }}
         >
           <FaUserPlus className="text-base" />
