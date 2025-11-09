@@ -1,5 +1,3 @@
-"use client";
-
 // React components
 import React, { useState, useEffect } from "react";
 

@@ -22,11 +22,13 @@ import useAxiosPublic from '@/Hooks/useAxiosPublic';
 // Shared
 import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
+import CategoryToIcon from '@/Shared/Manager/AllAssets/CategoryToIcon/CategoryToIcon';
+import AssetReturnTime from '@/Shared/Manager/AllAssets/AssetReturnTime/AssetReturnTime';
 
 // Modal
-import ViewRequestModal from '@/Shared/Employee/MyAssets/ViewRequestModal/ViewRequestModal';
-import CategoryToIcon from '@/Shared/Manager/AllAssets/CategoryToIcon/CategoryToIcon';
 import ViewAssetModal from '@/Shared/Manager/AllAssets/ViewAssetModal/ViewAssetModal';
+import ViewRequestModal from '@/Shared/Employee/MyAssets/ViewRequestModal/ViewRequestModal';
+import AssetServiceModal from '@/Shared/Employee/MyAssets/AssetServiceModal/AssetServiceModal';
 
 const Page = () => {
   const axiosPublic = useAxiosPublic();
@@ -47,7 +49,6 @@ const Page = () => {
         .get(`/Users/${session?.user?.email}`)
         .then((res) => res.data.user),
     enabled: !!session?.user?.email,
-
   });
 
   // Fetch users assets
@@ -90,7 +91,6 @@ const Page = () => {
   const uniqueAssets = Array.from(
     new Map(unifiedAssets.map(item => [item._id, item])).values()
   );
-
 
   // Loading state
   if (
@@ -151,6 +151,7 @@ const Page = () => {
                 { label: "Condition", align: "left" },
                 { label: "Warranty Period", align: "center" },
                 { label: "Private / Public", align: "center" },
+                { label: "Time", align: "center" },
                 { label: "Actions", align: "center" },
               ].map((col, idx) => (
                 <th
@@ -208,6 +209,17 @@ const Page = () => {
       {/* View Asset Modal */}
       <dialog id="View_Asset_Modal" className="modal">
         <ViewAssetModal
+          selectedAsset={selectedAsset}
+          setSelectedAsset={setSelectedAsset}
+        />
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+
+      {/* View Asset Modal */}
+      <dialog id="Asset_Return_Or_Repair_Modal" className="modal">
+        <AssetServiceModal
           selectedAsset={selectedAsset}
           setSelectedAsset={setSelectedAsset}
         />
@@ -279,13 +291,18 @@ const TableContent = ({ asset, setSelectedAsset }) => {
         )}
       </td>
 
+      {/* Time Left */}
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
+        <AssetReturnTime isLimited={asset?.isLimited} return_date={asset?.return_date} />
+      </td>
+
       {/* Actions */}
       <td className="flex justify-center py-4 px-1 gap-3">
         {/* Return / Repair Button */}
         <button
           className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap min-w-[8rem]" onClick={() => {
             setSelectedAsset(asset);
-            document.getElementById("Assign_Asset_Modal").showModal();
+            document.getElementById("Asset_Return_Or_Repair_Modal").showModal();
           }}
         >
           <FaUserPlus className="text-base" />
