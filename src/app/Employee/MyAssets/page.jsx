@@ -2,14 +2,14 @@
 "use client";
 
 // React components
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 // Next Auth
 import { useSession } from 'next-auth/react';
 
 
 // Icons
-import { FaEye, FaUserPlus, FaWallet } from 'react-icons/fa';
+import { FaAngleLeft, FaAngleRight, FaEye, FaSearch, FaUserPlus, FaWallet } from 'react-icons/fa';
 import { FaBoxOpen } from 'react-icons/fa';
 
 // Packages
@@ -29,6 +29,7 @@ import AssetReturnTime from '@/Shared/Manager/AllAssets/AssetReturnTime/AssetRet
 import ViewAssetModal from '@/Shared/Manager/AllAssets/ViewAssetModal/ViewAssetModal';
 import ViewRequestModal from '@/Shared/Employee/MyAssets/ViewRequestModal/ViewRequestModal';
 import AssetServiceModal from '@/Shared/Employee/MyAssets/AssetServiceModal/AssetServiceModal';
+import SharedHeader from '@/Shared/SharedHeader/SharedHeader';
 
 const Page = () => {
   const axiosPublic = useAxiosPublic();
@@ -36,6 +37,16 @@ const Page = () => {
 
   // Select State
   const [selectedAsset, setSelectedAsset] = useState(null);
+
+  // Filter States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCondition, setSelectedCondition] = useState("");
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   // Fetch Users Data
   const {
@@ -52,104 +63,261 @@ const Page = () => {
     enabled: !!session?.user?.email,
   });
 
-  // Fetch users assets
+  // Fetch user assets with filters & pagination
   const {
     data: UsersAssetsData,
     error: UsersAssetsError,
     refetch: UsersAssetsRefetch,
     isLoading: UsersAssetsIsLoading,
   } = useQuery({
-    queryKey: ["UsersAssetsData", session?.user?.email],
-    queryFn: () =>
-      axiosPublic
-        .get(`/Assets/Email/${session?.user?.email}`)
-        .then((res) => res.data.assets),
+    queryKey: [
+      "UsersAssetsData",
+      session?.user?.email,
+      currentPage,
+      itemsPerPage,
+      searchQuery,
+      selectedCategory,
+      selectedBrand,
+      selectedCondition,
+    ],
+    queryFn: () => {
+      if (!session?.user?.email) return Promise.resolve({ assets: [] });
+
+      return axiosPublic
+        .get(`/Assets/Email/${session.user.email}`, {
+          params: {
+            search: searchQuery || undefined,
+            category: selectedCategory || undefined,
+            brand: selectedBrand || undefined,
+            condition: selectedCondition || undefined,
+          },
+        })
+        .then(res => res.data);
+    },
     keepPreviousData: true,
     enabled: !!session?.user?.email,
   });
 
-  // Fetch Department Public
+  // Fetch Department Public with filters & pagination
   const {
     data: DepartmentPublicData,
     error: DepartmentPublicError,
     refetch: DepartmentPublicRefetch,
     isLoading: DepartmentPublicIsLoading,
   } = useQuery({
-    queryKey: ["DepartmentPublicData", UsersData?.department_id],
-    queryFn: () =>
-      axiosPublic
-        .get(`/Assets/DepartmentPublic/${UsersData?.department_id}`)
-        .then((res) => res.data.assets),
+    queryKey: [
+      "DepartmentPublicData",
+      UsersData?.department_id,
+      currentPage,
+      itemsPerPage,
+      searchQuery,
+      selectedCategory,
+      selectedBrand,
+      selectedCondition,
+    ],
+    queryFn: () => {
+      if (!UsersData?.department_id) return Promise.resolve({ assets: [] });
+
+      return axiosPublic
+        .get(`/Assets/DepartmentPublic/${UsersData.department_id}`, {
+          params: {
+            search: searchQuery || undefined,
+            category: selectedCategory || undefined,
+            brand: selectedBrand || undefined,
+            condition: selectedCondition || undefined,
+            includeAssigned: true,
+          },
+        })
+        .then(res => res.data);
+    },
     keepPreviousData: true,
     enabled: !!UsersData?.department_id,
   });
 
-  // Merge the two arrays safely
+  // Fetch Categories
+  const {
+    data: CategoryData,
+    error: CategoryError,
+    refetch: CategoryRefetch,
+    isLoading: CategoryIsLoading
+  } = useQuery({
+    queryKey: ["Category"],
+    queryFn: () => axiosPublic.get(`/AssetCategories`).
+      then(res => res.data.data),
+    keepPreviousData: true,
+  });
+
+  // Fetch AssetsBrands
+  const {
+    data: AssetsBrandsData,
+    error: AssetsBrandsError,
+    refetch: AssetsBrandsRefetch,
+    isLoading: AssetsBrandsIsLoading,
+  } = useQuery({
+    queryKey: ["AssetsBrandsData"],
+    queryFn: () =>
+      axiosPublic.get(`/Assets/Brands`).then((res) => res.data.data),
+    keepPreviousData: true,
+  });
+
+  // Fetch Assets Condition
+  const {
+    data: AssetsConditionData,
+    error: AssetsConditionError,
+    refetch: AssetsConditionRefetch,
+    isLoading: AssetsConditionIsLoading,
+  } = useQuery({
+    queryKey: ["AssetsConditionData"],
+    queryFn: () =>
+      axiosPublic.get(`/Assets/Condition`).then((res) => res.data.data),
+    keepPreviousData: true,
+  });
+
+  // Merge and remove duplicates
   const unifiedAssets = [
-    ...(UsersAssetsData || []),
-    ...(DepartmentPublicData || []),
+    ...(UsersAssetsData?.assets || []),
+    ...(DepartmentPublicData?.assets || []),
   ];
 
-  // Optional: remove duplicates by _id
   const uniqueAssets = Array.from(
     new Map(unifiedAssets.map(item => [item._id, item])).values()
   );
 
+  // Pagination logic
+  const totalItems = uniqueAssets.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const paginatedAssets = uniqueAssets.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Refetch
+  const Refetch = () => {
+    UsersRefetch();
+    CategoryRefetch();
+    UsersAssetsRefetch();
+    AssetsBrandsRefetch();
+    AssetsConditionRefetch();
+    DepartmentPublicRefetch();
+    AssetCategoriesNamesRefetch();
+  };
+
+  // Auto refetch Assets on filter change
+  useEffect(() => {
+    setCurrentPage(1); // reset pagination when filters change
+  }, [searchQuery, selectedCategory, selectedBrand, selectedCondition]);
+
   // Loading state
   if (
+    CategoryIsLoading ||
     status === "loading" ||
-    UsersAssetsIsLoading ||
-    DepartmentPublicIsLoading
+    AssetsBrandsIsLoading ||
+    AssetsConditionIsLoading
   ) return <Loading />;
 
   // Error state
   if (
     UsersError ||
-    UsersIsLoading ||
+    CategoryError ||
     UsersAssetsError ||
+    AssetsBrandsError ||
+    AssetsConditionError ||
     DepartmentPublicError
   ) {
-    console.error("UsersError:", UsersError);
-    console.error("UsersIsLoading:", UsersIsLoading);
-    console.error("UsersAssetsError:", UsersAssetsError);
-    console.error("DepartmentPublicError:", DepartmentPublicError);
+    console.error("UsersError :", UsersError);
+    console.error("CategoryError :", CategoryError);
+    console.error("UsersAssets  Error :", UsersAssetsError);
+    console.error("AssetsBrandsError :", AssetsBrandsError);
+    console.error("AssetsConditionError :", AssetsConditionError);
+    console.error("DepartmentPublicError :", DepartmentPublicError);
 
-    // Pass all errors to the Error component as an array
     return <Error errors={[
       UsersError,
-      UsersIsLoading,
+      CategoryError,
       UsersAssetsError,
+      AssetsBrandsError,
+      AssetsConditionError,
       DepartmentPublicError,
     ]} />;
   }
 
-  // Refetch
-  const Refetch = () => {
-    UsersRefetch();
-    UsersAssetsRefetch();
-    DepartmentPublicRefetch();
-  };
-
   return (
     <div className="p-5">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800 flex items-center gap-2">
-            <FaWallet size={28} className="text-blue-600" />
-            My Assets
-          </h1>
-          <p className="mt-1 text-gray-500 text-sm sm:text-base">
-            Manage and view all your assets in one place
-          </p>
-          <p className="mt-2 text-xs sm:text-sm text-gray-400 italic">
-            Tip: Use the filters to search and narrow down assets.
-          </p>
+      {/* Header Section */}
+      <SharedHeader
+        icon={<FaWallet size={28} className="text-blue-600" />}
+        title="My Assets"
+        description="Manage and view all your assets in one place."
+        tip="Tip: Use the filters to search and narrow down assets."
+      />
+
+      {/* Filter Section */}
+      <div className="bg-white border border-gray-200 rounded-xl flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4 p-5">
+        {/* Search Box */}
+        <div className="flex items-center gap-3 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+          <FaSearch className="text-gray-500 text-lg" />
+          <input
+            type="text"
+            placeholder="Search by asset name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400"
+          />
         </div>
+
+        {/* Brand Dropdown */}
+        <select
+          value={selectedBrand}
+          onChange={(e) => setSelectedBrand(e.target.value)}
+          className="min-w-52 border border-gray-200 rounded-xl px-4 py-2 text-gray-700 cursor-pointer bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+        >
+          <option value="">All Brands</option>
+          {[...new Set(AssetsBrandsData?.filter(Boolean))]?.map((brand, idx) => (
+            <option key={idx} value={brand}>
+              {brand}
+            </option>
+          ))}
+        </select>
+
+        {/* Condition Dropdown */}
+        <select
+          value={selectedCondition}
+          onChange={(e) => setSelectedCondition(e.target.value)}
+          className="min-w-52 border border-gray-200 rounded-xl px-4 py-2 text-gray-700 cursor-pointer bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+        >
+          <option value="">All Conditions</option>
+          {[...new Set(AssetsConditionData?.filter(Boolean))]?.map((cond, idx) => (
+            <option key={idx} value={cond}>
+              {cond}
+            </option>
+          ))}
+        </select>
+
+        {/* Category Dropdown */}
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="min-w-52 border border-gray-200 rounded-xl px-4 py-2 text-gray-700 cursor-pointer bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+        >
+          <option value="">All Categories</option>
+          {/* Use all categories, not filtered assets */}
+          {CategoryData?.map((cat) => (
+            <option key={cat._id} value={cat._id}>
+              {cat.category_name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Assets Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto mt-4 relative">
+        {UsersAssetsIsLoading || DepartmentPublicIsLoading && (
+          <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+            <Loading />
+          </div>
+        )}
+
+        {/* Table */}
         <table className="min-w-full bg-white border border-gray-200 rounded-lg">
           {/* Table Header */}
           <thead className="bg-gray-100">
@@ -176,8 +344,8 @@ const Page = () => {
 
           {/* Table Body */}
           <tbody>
-            {uniqueAssets && uniqueAssets.length > 0 ? (
-              uniqueAssets.map((asset, index) => (
+            {paginatedAssets && paginatedAssets.length > 0 ? (
+              paginatedAssets.map((asset, index) => (
                 <TableContent
                   asset={asset}
                   index={index}
@@ -203,6 +371,31 @@ const Page = () => {
             )}
           </tbody>
         </table>
+
+        {/* Pagination */}
+        <div className="flex justify-center mt-5">
+          <div className="join shadow rounded-lg overflow-hidden">
+            <button
+              className={`join-item px-5 py-2 font-medium text-black bg-white border border-gray-300 rounded-l-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed`}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <FaAngleLeft />
+            </button>
+
+            <button className="join-item px-5 py-2 font-medium text-black bg-white border-none cursor-default" disabled>
+              Page {currentPage} / {totalPages}
+            </button>
+
+            <button
+              className={`join-item px-5 py-2 font-medium text-black bg-white border border-gray-300 rounded-r-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed`}
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              <FaAngleRight />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Create New Request Modal */}
@@ -303,27 +496,64 @@ const TableContent = ({ asset, setSelectedAsset }) => {
         )}
       </td>
 
-      {/* Time Left */}
+      {/* Time Left / Request Status */}
       <td className="px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
-        <AssetReturnTime isLimited={asset?.isLimited} return_date={asset?.return_date} />
+        {asset?.request ? (
+          (() => {
+            const statusMap = {
+              pending_return: { text: "Return Requested", color: "bg-yellow-100 text-yellow-700" },
+              pending_repair: { text: "Repair Requested", color: "bg-blue-100 text-blue-700" },
+              pending_inspection: { text: "Inspection Requested", color: "bg-purple-100 text-purple-700" },
+              pending_upgrade: { text: "Upgrade Requested", color: "bg-green-100 text-green-700" },
+            };
+
+            const { text, color } = statusMap[asset.request.status] || {
+              text: asset.request.status,
+              color: "bg-gray-100 text-gray-700",
+            };
+
+            return (
+              <p className={`px-2 w-[200px] py-1 rounded-lg text-sm font-semibold ${color}`}>
+                {text}
+              </p>
+            );
+          })()
+        ) : (
+          <AssetReturnTime
+            isLimited={asset?.isLimited}
+            return_date={asset?.return_date}
+          />
+        )}
       </td>
 
       {/* Actions */}
       <td className="flex justify-center py-4 px-1 gap-3">
-        {/* Return / Repair Button */}
+        {/* Return / Repair Button — disabled if there's already a request */}
         <button
-          className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap min-w-[8rem]" onClick={() => {
-            setSelectedAsset(asset);
-            document.getElementById("Asset_Services_Modal").showModal();
+          className={`flex items-center justify-center gap-2 px-4 py-2.5 text-sm rounded-lg 
+            transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap min-w-[8rem] 
+            ${asset?.request
+              ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+              : "bg-green-600 text-white hover:bg-green-700 cursor-pointer"
+            }`}
+          onClick={() => {
+            if (!asset?.request) {
+              setSelectedAsset(asset);
+              document.getElementById("Asset_Services_Modal").showModal();
+            }
           }}
+          disabled={!!asset?.request}
         >
           <FaUserPlus className="text-base" />
-          Return / Repair
+          Asset Services
         </button>
+
 
         {/* View Button */}
         <button
-          className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 w-32 shadow-md hover:shadow-lg"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm bg-blue-500 
+          text-white rounded-lg hover:bg-blue-600 transition-all duration-200 w-32 
+          shadow-md hover:shadow-lg cursor-pointer "
           onClick={() => {
             setSelectedAsset(asset);
             document.getElementById("View_Asset_Modal").showModal();

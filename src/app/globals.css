@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-button {
+button:not([class]) {
     cursor: pointer;
 }
 

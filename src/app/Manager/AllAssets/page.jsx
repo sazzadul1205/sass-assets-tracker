@@ -260,7 +260,7 @@ const page = () => {
         text: error?.response?.data?.message || "Server error while Un Deleting asset.",
       });
     } finally {
-      setDeletingAssetsId(null); // Stop loading
+      setDeletingAssetsId(null);
     }
   };
 
