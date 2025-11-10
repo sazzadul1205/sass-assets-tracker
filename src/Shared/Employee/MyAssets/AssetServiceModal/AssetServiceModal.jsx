@@ -16,6 +16,7 @@ import {
 import AssetServiceReturnForm from "./AssetServiceReturnForm/AssetServiceReturnForm";
 import AssetServiceRepairForm from "./AssetServiceRepairForm/AssetServiceRepairForm";
 import AssetServiceUpgradeForm from "./AssetServiceUpgradeForm/AssetServiceUpgradeForm";
+import AssetServiceInspectionForm from "./AssetServiceInspectionForm/AssetServiceInspectionForm";
 
 const AssetServiceModal = ({
   Refetch,
@@ -179,6 +180,8 @@ const AssetServiceModal = ({
 
           </div>
 
+          <p className="bg-gray-500 w-full py-[0.5px] my-2 " />
+
           {activeRequest === "return" && (
             <AssetServiceReturnForm
               Refetch={Refetch}
@@ -210,7 +213,13 @@ const AssetServiceModal = ({
           )}
 
           {activeRequest === "inspection" && (
-            <></>
+            <AssetServiceInspectionForm
+              Refetch={Refetch}
+              setError={setError}
+              userData={userData}
+              handleClose={handleClose}
+              selectedAsset={selectedAsset}
+            />
           )}
         </div>
       )}
