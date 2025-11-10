@@ -32,3 +32,17 @@ export const assets_condition_replace = [
   { label: "Disposed / Recycled", value: "disposed" },
   { label: "Scrapped / Beyond Repair", value: "scrapped" },
 ];
+
+// Conditions for Upgrade (asset works but can be improved or modernized)
+export const assets_condition_upgrade = [
+  { label: "Outdated Specifications", value: "outdated_specifications" },
+  { label: "Insufficient Performance", value: "insufficient_performance" },
+  { label: "Low Capacity / Storage", value: "low_capacity" },
+  { label: "Incompatible with New Systems", value: "incompatible_systems" },
+  { label: "Missing Modern Features", value: "missing_features" },
+  { label: "Requires Software Upgrade", value: "software_upgrade_needed" },
+  { label: "Requires Hardware Upgrade", value: "hardware_upgrade_needed" },
+  { label: "Energy Inefficient", value: "energy_inefficient" },
+  { label: "Needs Modernization", value: "needs_modernization" },
+  { label: "Upgradable for Better Performance", value: "upgradable" },
+];

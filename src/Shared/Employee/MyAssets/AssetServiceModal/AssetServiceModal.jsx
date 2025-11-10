@@ -15,6 +15,7 @@ import {
 // Shared
 import AssetServiceReturnForm from "./AssetServiceReturnForm/AssetServiceReturnForm";
 import AssetServiceRepairForm from "./AssetServiceRepairForm/AssetServiceRepairForm";
+import AssetServiceUpgradeForm from "./AssetServiceUpgradeForm/AssetServiceUpgradeForm";
 
 const AssetServiceModal = ({
   Refetch,
@@ -199,7 +200,13 @@ const AssetServiceModal = ({
           )}
 
           {activeRequest === "upgrade" && (
-            <></>
+            <AssetServiceUpgradeForm
+              Refetch={Refetch}
+              setError={setError}
+              userData={userData}
+              handleClose={handleClose}
+              selectedAsset={selectedAsset}
+            />
           )}
 
           {activeRequest === "inspection" && (
