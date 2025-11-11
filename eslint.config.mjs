@@ -11,7 +11,7 @@ const compat = new FlatCompat({ baseDirectory: __dirname });
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals"),
   {
-    files: ["src/**/*.js", "src/**/*.jsx"],
+    files: ["src/**/*.{js,jsx,ts,tsx}"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -25,6 +25,7 @@ const eslintConfig = [
       "no-debugger": "warn",
       "no-unused-expressions": "off",
       "import/no-anonymous-default-export": "off",
+      "no-undef": "error",
     },
   },
   {
