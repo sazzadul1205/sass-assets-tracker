@@ -27,7 +27,7 @@ import useAxiosPublic from "@/Hooks/useAxiosPublic";
 import EditCategoryModal from "@/Shared/Manager/AssetCategories/EditCategoryModal/EditCategoryModal";
 import CreatedCategoryModal from "@/Shared/Manager/AssetCategories/CreatedCategoryModal/CreatedCategoryModal";
 
-const page = () => {
+const Page = () => {
   const axiosPublic = useAxiosPublic();
   const { data: session, status } = useSession();
 
@@ -436,4 +436,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;
