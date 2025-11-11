@@ -2,10 +2,7 @@
 import { connectDB } from "@/lib/connectDB";
 import { NextResponse } from "next/server";
 
-/**
- * POST - Create a new Asset Request
- * Expected body: { asset_id, requested_by, department, reason, priority, ... }
- */
+// POST - Create a new Asset Request
 export const POST = async (request) => {
   try {
     const newRequest = await request.json();
@@ -48,10 +45,7 @@ export const POST = async (request) => {
   }
 };
 
-/**
- * GET - Fetch all Asset Requests
- * Optional query: ?department=IT or ?status=pending
- */
+//  GET - Fetch all Asset Requests
 export const GET = async (request) => {
   try {
     const db = await connectDB();
