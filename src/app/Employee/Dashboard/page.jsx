@@ -27,8 +27,6 @@ import Loading from "@/Shared/Loading/Loading";
 // Shared Components
 import LogLists from "@/Shared/Employee/EmployeeDashboard/LogLists/LogLists";
 import QuickAccess from "@/Shared/Employee/EmployeeDashboard/QuickAccess/QuickAccess ";
-import RequestStatusCards from "@/Shared/Employee/MyRequests/RequestStatusCards/RequestStatusCards";
-
 
 const Page = () => {
   const axiosPublic = useAxiosPublic();
@@ -40,20 +38,6 @@ const Page = () => {
   // Pagination for logs
   const [logPage, setLogPage] = useState(1);
   const logLimit = 10;
-
-  // ---------- Requests Status Query ----------
-  const {
-    data: RequestsStatusData,
-    error: RequestsStatusError,
-    isLoading: RequestsStatusIsLoading,
-  } = useQuery({
-    queryKey: ["RequestsStatusData", session?.user?.email],
-    queryFn: () =>
-      axiosPublic
-        .get(`/Requests/Created_by/${session?.user?.email}/Status`)
-        .then((res) => res.data),
-    enabled: !!session?.user?.email,
-  });
 
   // ---------- Log Status Query with Pagination ----------
   const {
@@ -76,16 +60,15 @@ const Page = () => {
   });
 
   // Combined Loading
-  if (RequestsStatusIsLoading || LogStatusIsLoading || status === "loading")
+  if (LogStatusIsLoading || status === "loading")
     return <Loading />;
 
   // Error Handling
-  if (RequestsStatusError || LogStatusError) {
-    console.error("RequestsStatusError:", RequestsStatusError);
+  if (LogStatusError) {
     console.error("LogStatusError:", LogStatusError);
 
     // Pass all errors to the Error component as an array
-    return <Error errors={[RequestsStatusError, LogStatusError]} />;
+    return <Error errors={[ LogStatusError]} />;
   }
 
   return (
@@ -140,12 +123,6 @@ const Page = () => {
       <div className="mt-5">
         <h3 className="text-2xl font-semibold text-gray-800 mb-2">My Requests</h3>
 
-        <RequestStatusCards
-          disabled={true}
-          selectedStatus={selectedStatus}
-          setSelectedStatus={setSelectedStatus}
-          RequestsStatusData={RequestsStatusData}
-        />
       </div>
 
       {/* Quick Access Section */}

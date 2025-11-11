@@ -22,6 +22,7 @@ import useAxiosPublic from '@/Hooks/useAxiosPublic';
 // Shared
 import Error from '@/Shared/Error/Error';
 import Loading from '@/Shared/Loading/Loading';
+import SharedHeader from '@/Shared/SharedHeader/SharedHeader';
 import CategoryToIcon from '@/Shared/Manager/AllAssets/CategoryToIcon/CategoryToIcon';
 import AssetReturnTime from '@/Shared/Manager/AllAssets/AssetReturnTime/AssetReturnTime';
 
@@ -29,7 +30,6 @@ import AssetReturnTime from '@/Shared/Manager/AllAssets/AssetReturnTime/AssetRet
 import ViewAssetModal from '@/Shared/Manager/AllAssets/ViewAssetModal/ViewAssetModal';
 import ViewRequestModal from '@/Shared/Employee/MyAssets/ViewRequestModal/ViewRequestModal';
 import AssetServiceModal from '@/Shared/Employee/MyAssets/AssetServiceModal/AssetServiceModal';
-import SharedHeader from '@/Shared/SharedHeader/SharedHeader';
 
 const Page = () => {
   const axiosPublic = useAxiosPublic();
@@ -179,6 +179,7 @@ const Page = () => {
     ...(DepartmentPublicData?.assets || []),
   ];
 
+  // Remove duplicates
   const uniqueAssets = Array.from(
     new Map(unifiedAssets.map(item => [item._id, item])).values()
   );
@@ -199,7 +200,6 @@ const Page = () => {
     AssetsBrandsRefetch();
     AssetsConditionRefetch();
     DepartmentPublicRefetch();
-    AssetCategoriesNamesRefetch();
   };
 
   // Auto refetch Assets on filter change
@@ -209,6 +209,7 @@ const Page = () => {
 
   // Loading state
   if (
+    UsersIsLoading ||
     CategoryIsLoading ||
     status === "loading" ||
     AssetsBrandsIsLoading ||
@@ -438,7 +439,7 @@ const Page = () => {
 
 export default Page;
 
-const TableContent = ({ asset, setSelectedAsset }) => {
+const TableContent = ({ asset, setSelectedAsset, index }) => {
   return (
     <tr
       key={asset._id || index}
@@ -473,7 +474,7 @@ const TableContent = ({ asset, setSelectedAsset }) => {
 
       {/* Warranty Period */}
       <td className=" px-6 py-4 whitespace-nowrap text-sm text-center cursor-default">
-        {asset.warranty_period || "—"} Month's
+        {asset.warranty_period || "—"} Month&apos;s
         <p className="text-xs text-gray-500" >
           (   {new Date(asset.warranty_expiry_date).toLocaleString("en-GB", {
             day: "2-digit",
