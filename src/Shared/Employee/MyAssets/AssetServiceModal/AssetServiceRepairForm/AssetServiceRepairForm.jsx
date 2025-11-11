@@ -159,8 +159,7 @@ const AssetServiceRepairForm = ({
           disabled={isSubmitting || isLoading}
           className={`w-full h-11 font-semibold text-white rounded-lg transition-all ${isSubmitting || isLoading
             ? "bg-blue-400 cursor-not-allowed pointer-events-none"
-            : "bg-blue-600 hover:bg-blue-700"
-            }`}
+            : "bg-blue-600 hover:bg-blue-700 cursor-pointer"}`}
         >
           {isSubmitting || isLoading ? (
             <span className="loading loading-spinner loading-sm"></span>
